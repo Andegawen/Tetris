@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27703.2035
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "TetrisApp", "TetrisApp\TetrisApp.fsproj", "{FAC06897-B653-413C-BBDF-056FCDE70B18}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "TetrisImpl", "TetrisImpl\TetrisImpl.fsproj", "{424288B5-3062-466E-A147-CC1C0AF0802B}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "TetrisTests", "TetrisTests\TetrisTests.fsproj", "{3F8CD535-5326-46E7-8E39-F1C90D025E6B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FAC06897-B653-413C-BBDF-056FCDE70B18}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FAC06897-B653-413C-BBDF-056FCDE70B18}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FAC06897-B653-413C-BBDF-056FCDE70B18}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FAC06897-B653-413C-BBDF-056FCDE70B18}.Release|Any CPU.Build.0 = Release|Any CPU
+		{424288B5-3062-466E-A147-CC1C0AF0802B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{424288B5-3062-466E-A147-CC1C0AF0802B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{424288B5-3062-466E-A147-CC1C0AF0802B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{424288B5-3062-466E-A147-CC1C0AF0802B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3F8CD535-5326-46E7-8E39-F1C90D025E6B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3F8CD535-5326-46E7-8E39-F1C90D025E6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3F8CD535-5326-46E7-8E39-F1C90D025E6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3F8CD535-5326-46E7-8E39-F1C90D025E6B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {EF1E31EA-720A-4572-93B7-040E2C57EC53}
+	EndGlobalSection
+EndGlobal
