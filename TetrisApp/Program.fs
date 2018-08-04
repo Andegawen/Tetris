@@ -1,43 +1,7 @@
-﻿// Learn more about F# at http://fsharp.org
-
-open System
-
+﻿open System
 
 module Domain =
-    [<Measure>] type x
-    [<Measure>] type y
-
-    module XYArray =
-        (*
-           0  1  2 
-           3  4  5
-           6  7  8
-           9  10 11
-
-          len = 12
-
-          x = 3, y = 0
-
-        *)
-        type 'a xyArray = private { arr: 'a array; maxX : int }
-        with member arr.maxY = arr.arr.Length / arr.maxX
-
-        let private getXY point maxX=
-            let x = int16 (point % maxX) * 1s<x>
-            let y = int16 (point / maxX) * 1s<y>
-            x, y    
-
-        let init (x : int16<x>) (y:int16<y>) f =
-            let x = int x
-            let y = int y
-            { arr = Array.init (x * y) (fun point -> 
-                let x, y = getXY x point
-                f x y); maxX = x }
-
-
-        let get x y arr = ()
-        let set x y arr = ()
-
+    open XYArray
     type Field = Empty | Block
     type Board = Field [,] 
     type Coordinate = {X:int; Y:int}

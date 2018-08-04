@@ -6,6 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="XYArray.fs" />
+    <Compile Include="Playground.fsx" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
