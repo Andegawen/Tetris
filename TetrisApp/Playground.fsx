@@ -14,7 +14,9 @@ XYArray.get 1s<XYArray.x> 1s<XYArray.y> x = Some 1
 XYArray.get 2s<XYArray.x> 1s<XYArray.y> x = Some 2
 
 
+let newXOutOfBound = XYArray.set 5s<XYArray.x> 1s<XYArray.y> 13 x 
+newXOutOfBound = None
 
 let newX = XYArray.set 1s<XYArray.x> 1s<XYArray.y> 13 x 
-XYArray.get 1s<XYArray.x> 1s<XYArray.y> newX = Some 13
-XYArray.get 2s<XYArray.x> 1s<XYArray.y> newX = Some 2
+(XYArray.get 1s<XYArray.x> 1s<XYArray.y> (Option.get newX)) = Some 13
+(XYArray.get 2s<XYArray.x> 1s<XYArray.y> (Option.get newX)) = Some 2

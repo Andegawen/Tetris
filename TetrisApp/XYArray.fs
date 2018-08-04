@@ -43,5 +43,8 @@ module XYArray
                 value
             else
                 Option.get (get xx yy arr)
-                
-        init ((int16)arr.maxX*1s<x>) ((int16)arr.maxY*1s<y>) initEl
+        if ((int)x)<arr.maxX && ((int)y)<arr.maxY 
+        then
+            Some (init ((int16)arr.maxX*1s<x>) ((int16)arr.maxY*1s<y>) initEl)
+        else
+            None
