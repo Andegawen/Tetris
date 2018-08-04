@@ -37,4 +37,11 @@ module XYArray
         else
             None
 
-    //let set x y arr = ()
+    let set (x:int16<x>) (y:int16<y>) value arr =         
+        let initEl (xx : int16<x>) (yy:int16<y>) = 
+            if xx = x && yy=y then
+                value
+            else
+                Option.get (get xx yy arr)
+                
+        init ((int16)arr.maxX*1s<x>) ((int16)arr.maxY*1s<y>) initEl

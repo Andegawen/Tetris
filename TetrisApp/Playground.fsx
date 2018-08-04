@@ -12,3 +12,9 @@ XYArray.get 4s<XYArray.x> 1s<XYArray.y> x = None
 XYArray.get 2s<XYArray.x> 3s<XYArray.y> x = None
 XYArray.get 1s<XYArray.x> 1s<XYArray.y> x = Some 1
 XYArray.get 2s<XYArray.x> 1s<XYArray.y> x = Some 2
+
+
+
+let newX = XYArray.set 1s<XYArray.x> 1s<XYArray.y> 13 x 
+XYArray.get 1s<XYArray.x> 1s<XYArray.y> newX = Some 13
+XYArray.get 2s<XYArray.x> 1s<XYArray.y> newX = Some 2
