@@ -14,7 +14,9 @@ module XYArray
     [<Measure>] type y
 
     type 'a xyArray = private { arr: 'a array; maxX : int }
-    with member arr.maxY = arr.arr.Length / arr.maxX
+    with 
+        member public arr.maxsX = arr.maxX
+        member public arr.maxY = arr.arr.Length / arr.maxX
 
     let private getXY point maxX=
         let x = int16 (point % maxX) * 1s<x>

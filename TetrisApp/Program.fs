@@ -1,12 +1,13 @@
 ﻿open System
+open XYArray
 
-module Domain =
-    open XYArray
+module Domain =    
     type Field = Empty | Block
-    type Board = Field [,] 
+    type Board = xyArray<Field>
     type Coordinate = {X:int; Y:int}
     type Block = Coordinate Set
-    let initBoard = Array2D.init  20 10 (fun _ _ -> Empty)
+
+    let initBoard = XYArray.init  20s<XYArray.x> 10s<XYArray.y> (fun _ _ -> Empty)
 
     type Score = Score of uint32
     type InProgress = { Board:Board; Score:Score; ActiveBlock:Block }
@@ -62,12 +63,12 @@ module Game =
         match state with
         | Start -> printfn "Press s to start"
         | InProgress progress -> 
-            for y = 0  to Array2D.length1 progress.Board - 1 do
+            for y = 0  to progress.Board.maxY - 1 do
                 printf "|"
-                for x = 0  to Array2D.length2 progress.Board  - 1 do
+                for x = 0  to progress.Board.maxsX  - 1 do
                     if progress.ActiveBlock.Contains { X = x; Y= y} 
                         then "X" 
-                        else if progress.Board.[y, x] = Empty then " " else "*"
+                        else if XYArray.get (1s<x>*(int16)x) (1s<y>*(int16)y) progress.Board = Some Empty then " " else "*"
                     |> printf "%s" 
                 printfn "|"
             let (Score score) = progress.Score in printfn "Score: %d" score
