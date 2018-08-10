@@ -10,10 +10,12 @@
     *)
 
 module XYArray
-    [<Measure>] type x =
+    [<Measure>]
+    type x =
         static member lift (v:int) = (int16)v * 1s<x>
         static member lift (v:int16) = v * 1s<x>
-    [<Measure>] type y =
+    [<Measure>]
+    type y =
         static member lift (v:int) = (int16)v * 1s<y>
         static member lift (v:int16) = v * 1s<y>
 
