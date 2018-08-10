@@ -1,12 +1,18 @@
 module Game
     open XYArray
     open Domain
-    open ListExt
    
     let generateActiveBlock blockDef random (sizeX:int16<x>) =
         let el = ListExt.getRandomElement random blockDef
         el |> Set.map (fun c -> { c with X=c.X+(sizeX/2s) })
     
+    let isBlockInBound inProgressState block =
+            block |> Set.forall (fun c -> 
+                c.X<=inProgressState.Board.maxX
+                && c.X >= 0s<x>
+                && c.Y<=inProgressState.Board.maxY
+                && c.Y >= 0s<y>)
+
     let rotateActiveBlock inProgressState direction = 
         let rotateBlock (block:Block) (angle:float) : Block=
             let elXmin = block |> Set.toList |> List.minBy (fun c->c.X);
@@ -25,20 +31,29 @@ module Game
                     {X= cooridinateRotatedInOrigin.X + shift.X; Y=cooridinateRotatedInOrigin.Y + shift.Y}
                 coordinateRotatedAndShiftedToOriginal)
 
-        let isInBound block =
-            block |> Set.forall (fun c -> 
-                c.X<=inProgressState.Board.maxX
-                && c.X >= 0s<x>
-                && c.Y<=inProgressState.Board.maxY
-                && c.Y >= 0s<y>)
         let rotateActiveBlock' inProgressState angle=
             let ab=rotateBlock inProgressState.ActiveBlock angle
-            if isInBound ab then
+            if isBlockInBound inProgressState ab then
                 {inProgressState with ActiveBlock=ab}
             else inProgressState
         match direction with
         | Left -> rotateActiveBlock' inProgressState (System.Math.PI/2.0)
         | Right -> rotateActiveBlock' inProgressState (-System.Math.PI/2.0)
+
+    let moveBlock block shift =
+        let (x,y) = shift
+        block
+        |> Set.map (fun c -> {X=c.X+x; Y=c.Y+y})
+    let moveActiveBlock inProgressState direction =
+        
+        let moveActiveBlock' inProgressState shift = 
+            let ab=moveBlock inProgressState.ActiveBlock shift
+            if isBlockInBound inProgressState ab then
+                {inProgressState with ActiveBlock=ab}
+            else inProgressState
+        match direction with
+        | Left -> moveActiveBlock' inProgressState (-1s<x>,0s<y>)
+        | Right -> moveActiveBlock' inProgressState (1s<x>,0s<y>)
 
     let loop random userInput state = 
         match (state, userInput) with
@@ -49,6 +64,8 @@ module Game
             state
         | InProgress inProgressState, UserInput.Rotate direction ->
             InProgress (rotateActiveBlock inProgressState direction)
+        | InProgress inProgressState, UserInput.Move direction ->
+            InProgress (moveActiveBlock inProgressState direction)
 
     let print state = 
         match state with
