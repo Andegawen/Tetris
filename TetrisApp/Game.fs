@@ -55,6 +55,25 @@ module Game
         | Left -> moveActiveBlock' inProgressState (-1s<x>,0s<y>)
         | Right -> moveActiveBlock' inProgressState (1s<x>,0s<y>)
 
+    let fallDownBlock inProgressState =
+        let findYShift (board:Board) (block:Block) =
+            let lowestBlockYCoordinates =
+                block
+                |> Set.toList
+                |> List.groupBy (fun c->c.X)
+                |> List.map (fun (_,col)-> List.minBy (fun c->c.Y) col)
+            lowestBlockYCoordinates
+            |> List.map (fun c-> (c, XYArray.get c.X c.Y board))
+            |> List.map (fun (c,v)->c.Y-v.Value.Y)
+            |> List.min
+
+        let someY = findYShift inProgressState.Board inProgressState.ActiveBlock
+        let block = moveBlock (0s<x>, someY)
+        let newBoard = for c in block do
+            XYArray.set c inProgressState.Board
+        {inProgressState with Board = newBoard}
+
+
     let loop random userInput state = 
         match (state, userInput) with
         | _, UserInput.Restart -> InProgress {Board = initBoard; Score= Score 0u; ActiveBlock=(generateActiveBlock blocks random 10s<x>)}
@@ -66,6 +85,8 @@ module Game
             InProgress (rotateActiveBlock inProgressState direction)
         | InProgress inProgressState, UserInput.Move direction ->
             InProgress (moveActiveBlock inProgressState direction)
+        | InProgress inProgressState, UserInput.FallDown ->
+            InProgress (fallDownBlock inProgressState)
 
     let print state = 
         match state with
