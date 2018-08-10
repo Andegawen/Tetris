@@ -1,5 +1,4 @@
-﻿open System
-open XYArray
+﻿open XYArray
 
 module Domain =    
     type Field = Empty | Block
@@ -33,8 +32,8 @@ module Domain =
            [ "XX"
              " XX"];
         ] |> List.map 
-            (List.mapi (fun y -> 
-                    Seq.mapi (fun x ch -> if ch = ' ' then None else  Some {X = (int16)x*1s<x>; Y = (int16)y*1s<y>}) 
+            (List.mapi (fun yv -> 
+                    Seq.mapi (fun xv ch -> if ch = ' ' then None else  Some {X = x.lift xv; Y = y.lift yv}) 
                     >> Seq.choose id)
                 >> Seq.collect id
                 >> Set)
@@ -63,9 +62,9 @@ module Game =
         match state with
         | Start -> printfn "Press s to start"
         | InProgress progress -> 
-            for y in [0s .. (int16)progress.Board.maxY - 1s] |> List.map (fun el -> el*1s<y>) do
+            for y in [0s .. (int16)progress.Board.maxY - 1s] |> List.map (fun el -> y.lift el) do
                 printf "|"
-                for x in [0s .. (int16)progress.Board.maxsX  - 1s] |> List.map (fun el -> el*1s<x>) do
+                for x in [0s .. (int16)progress.Board.maxX  - 1s] |> List.map (fun el -> x.lift el) do
                     if progress.ActiveBlock.Contains { X = x; Y= y} 
                         then "X" 
                         else if XYArray.get x y progress.Board = Some Empty then " " else "*"

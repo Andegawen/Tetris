@@ -10,16 +10,23 @@
     *)
 
 module XYArray
-    [<Measure>] type x
-    [<Measure>] type y
+    [<Measure>] type x =
+        static member lift (v:int) = (int16)v * 1s<x>
+        static member lift (v:int16) = v * 1s<x>
+    [<Measure>] type y =
+        static member lift (v:int) = (int16)v * 1s<y>
+        static member lift (v:int16) = v * 1s<y>
 
-    type 'a xyArray = private { arr: 'a array; maxX : int16<x> }
+    let removeUnit (x:int16<_>) =
+        int16 x
+
+    type 'a xyArray = private { arr: 'a array; maximumX : int16<x> }
     with 
-        member public arr.maxsX = arr.maxX
-        member public arr.maxY = (int16)(arr.arr.Length / (int)arr.maxX) * 1s<y>
+        member public arr.maxX = arr.maximumX
+        member public arr.maxY = y.lift ((int16)arr.arr.Length / (removeUnit arr.maxX))
 
     let private getXY (point:int) (maxX:int16<x>)=
-        let x = (int16)point*1s<x> % maxX
+        let x = x.lift point % maxX
         let y = (int16)point / maxX * (1s<y*x>)
         x, y
 
@@ -28,13 +35,13 @@ module XYArray
         let ydimless = int y
         { arr = Array.init (xdimless * ydimless) (fun point -> 
             let x, y = getXY point x
-            f x y); maxX = x }
+            f x y); maximumX = x }
 
 
-    let get (x:int16<x>) y arr = 
-        if x<arr.maxX && y<arr.maxY 
+    let get (xv:int16<x>) yv arr = 
+        if xv<arr.maximumX && yv<arr.maxY 
         then
-            let accessIndex = (int)(x+y*((int16)arr.maxX * 1s<x>/1s<y>))
+            let accessIndex = (int)(xv+yv*(arr.maxX/1s<y>))
             Some arr.arr.[accessIndex]
         else
             None
