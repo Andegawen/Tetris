@@ -3,7 +3,6 @@ open XYArray
 #load "Domain.fs"
 open Domain
 #load "ListExt.fs"
-open ListExt
 #load "Game.fs"
 open Game
 

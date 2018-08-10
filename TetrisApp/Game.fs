@@ -4,17 +4,27 @@ module Game
     open ListExt
    
     let generateActiveBlock blockDef random (sizeX:int16<x>) =
-        let el = getRandomElement random blockDef
+        let el = ListExt.getRandomElement random blockDef
         el |> Set.map (fun c -> { c with X=c.X+(sizeX/2s) })
     
     let rotateActiveBlock inProgressState direction = 
         let rotateBlock (block:Block) (angle:float) : Block=
+            let elXmin = block |> Set.toList |> List.minBy (fun c->c.X);
+            let elYmax = block |> Set.toList |> List.maxBy (fun c->c.Y);
+            let shift = {X=elXmin.X; Y=elYmax.Y}
             block 
             |> Set.map (fun c -> 
-                {
-                    X=x.lift(removeUnit c.X * (int16) (cos angle) - removeUnit c.Y * (int16) (sin angle));
-                    Y=y.lift(removeUnit c.Y * (int16) (cos angle) + removeUnit c.X * (int16) (sin angle))
-                })
+                let coordinateShiftedToOrigin = {X= (c.X - shift.X); Y = (c.Y - shift.Y)}
+                let xv = XYArray.removeUnit coordinateShiftedToOrigin.X
+                let yv = XYArray.removeUnit coordinateShiftedToOrigin.Y
+                let cooridinateRotatedInOrigin = {
+                    X=x.lift(xv * (int16) (cos angle) - yv  * (int16) (sin angle));
+                    Y=y.lift(yv * (int16) (cos angle) + xv * (int16) (sin angle))
+                }
+                let coordinateRotatedAndShiftedToOriginal = 
+                    {X= cooridinateRotatedInOrigin.X + shift.X; Y=cooridinateRotatedInOrigin.Y + shift.Y}
+                coordinateRotatedAndShiftedToOriginal)
+
         let isInBound block =
             block |> Set.forall (fun c -> 
                 c.X<=inProgressState.Board.maxX
