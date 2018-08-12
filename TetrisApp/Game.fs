@@ -83,14 +83,16 @@ module Game
             |> List.min
         
         let theSmallestShiftY = findYShift board activeBlock
-        printfn "shift: %A" theSmallestShiftY
-        let block = moveBlock activeBlock (0s<XYArray.x>, theSmallestShiftY)
-        
-        let mutable newBoard = board
-        for c in block do
-            newBoard <- (XYArray.set c.X c.Y Field.Block newBoard).Value
-        newBoard
-
+        if theSmallestShiftY = 0s<y> 
+        then 
+            None 
+        else
+            let block = moveBlock activeBlock (0s<XYArray.x>, theSmallestShiftY)
+            
+            let mutable newBoard = board
+            for c in block do
+                newBoard <- (XYArray.set c.X c.Y Field.Block newBoard).Value
+            Some newBoard
 
     let loop random userInput state = 
         match (state, userInput) with
@@ -104,13 +106,13 @@ module Game
         | InProgress inProgressState, UserInput.Move direction ->
             InProgress (moveActiveBlock inProgressState direction)
         | InProgress inProgressState, UserInput.FallDown ->
-            let boardProgression board score=
-                if true //decide: is it the end of game?
+            let evaluateBoardProgression board score=
                 //count full lines; change board and add score
-                then InProgress {Board =board; ActiveBlock = (generateActiveBlock blocks random 10s<x>); Score=score}
-                else State.End score
+                InProgress {Board =board; ActiveBlock = (generateActiveBlock blocks random 10s<x>); Score=score}
             let newBoard = fallDownBlock inProgressState.Board inProgressState.ActiveBlock
-            boardProgression newBoard inProgressState.Score
+            match newBoard with
+            | None -> State.End inProgressState.Score
+            | Some b -> evaluateBoardProgression b inProgressState.Score
 
     let print state = 
         match state with
