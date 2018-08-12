@@ -41,20 +41,20 @@ module XYArray
 
 
     let get (xv:int16<x>) yv arr = 
-        if xv<arr.maximumX && yv<arr.maxY 
+        if xv<arr.maximumX && yv<arr.maxY && xv >=0s<x> && yv >=0s<y>
         then
             let accessIndex = (int)(xv+yv*(arr.maxX/1s<y>))
             Some arr.arr.[accessIndex]
         else
             None
 
-    let set (x:int16<x>) (y:int16<y>) value arr =         
-        let initEl (xx : int16<x>) (yy:int16<y>) = 
-            if xx = x && yy=y then
+    let set (xv:int16<x>) (yv:int16<y>) value arr =         
+        let initEl (x : int16<x>) (y:int16<y>) = 
+            if xv = x && yv=y then
                 value
             else
-                Option.get (get xx yy arr)
-        if x<arr.maxX && y<arr.maxY 
+                Option.get (get x y arr)
+        if xv<arr.maxX && yv<arr.maxY && xv >=0s<x> && yv >=0s<y>
         then
             Some (init arr.maxX arr.maxY initEl)
         else
