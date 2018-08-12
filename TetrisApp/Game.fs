@@ -58,31 +58,33 @@ module Game
 
     let fallDownBlock (board:Board) (activeBlock:Block) =
         let findYShift (board:Board) (block:Block) : int16<y> =
-            let lowestBlockYCoordinates =
+            let ``x to the most bottom Y from block`` =
                 block
                 |> Set.toList
                 |> List.groupBy (fun c->c.X)
-                |> List.map (fun (_,col)-> List.minBy (fun c->c.Y) col)
-            let findNonEmptyY (xv:int16<x>) (startY:int16<y>) board = 
-                [(XYArray.removeUnit startY) .. 0s]
+                |> List.map (fun (x,col)-> (x,(List.maxBy (fun c->c.Y) col).Y))
+            
+            let findTheMostTopNonEmptyY (xv:int16<x>) (startY:int16<y>) (board:Board) =
+                [(XYArray.removeUnit startY) .. (XYArray.removeUnit board.maxY)-1s]
                 |> List.map XYArray.y.lift
                 |> List.map (fun yv -> (yv, XYArray.get xv yv board))
                 |> List.filter (fun (yv, bv) -> bv = Some Field.Block)
-                |> ListExt.maxBy (fun (yv,bv) -> yv)
+                |> ListExt.minBy (fun (yv,bv) -> yv)
                 |> Option.bind (fun (yv, bv)-> Some yv)
+            
             //find non empty board Y
-            lowestBlockYCoordinates
-            |> List.map (fun c-> 
-                let yBoard = findNonEmptyY c.X c.Y board
+            ``x to the most bottom Y from block``
+            |> List.map (fun (xv,yv)-> 
+                let yBoard = findTheMostTopNonEmptyY xv (yv+1s<y>) board
                 let shift = match yBoard with
-                            | Some value -> c.Y-value
-                            | None -> c.Y
-                (c.Y, shift))
-            |> List.minBy (fun (y, shift) -> shift)
-            |> fst
-
-        let someY = findYShift board activeBlock
-        let block = moveBlock activeBlock (0s<XYArray.x>, someY)
+                            | Some value -> value-(1s<y>)-yv
+                            | None -> board.maxY-(1s<y>)-yv
+                shift)
+            |> List.min
+        
+        let theSmallestShiftY = findYShift board activeBlock
+        printfn "shift: %A" theSmallestShiftY
+        let block = moveBlock activeBlock (0s<XYArray.x>, theSmallestShiftY)
         
         let mutable newBoard = board
         for c in block do
