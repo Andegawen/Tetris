@@ -83,16 +83,12 @@ module Game
             |> List.min
         
         let theSmallestShiftY = findYShift board activeBlock
-        if theSmallestShiftY = 0s<y> 
-        then 
-            None 
-        else
-            let block = moveBlock activeBlock (0s<XYArray.x>, theSmallestShiftY)
-            
-            let mutable newBoard = board
-            for c in block do
-                newBoard <- (XYArray.set c.X c.Y Field.Block newBoard).Value
-            Some newBoard
+        let block = moveBlock activeBlock (0s<XYArray.x>, theSmallestShiftY)
+        
+        let mutable newBoard = board
+        for c in block do
+            newBoard <- (XYArray.set c.X c.Y Field.Block newBoard).Value
+        newBoard
 
     let loop random userInput state = 
         match (state, userInput) with
@@ -107,12 +103,20 @@ module Game
             InProgress (moveActiveBlock inProgressState direction)
         | InProgress inProgressState, UserInput.FallDown ->
             let evaluateBoardProgression board score=
-                //count full lines; change board and add score
-                InProgress {Board =board; ActiveBlock = (generateActiveBlock blocks random 10s<x>); Score=score}
-            let newBoard = fallDownBlock inProgressState.Board inProgressState.ActiveBlock
-            match newBoard with
-            | None -> State.End inProgressState.Score
-            | Some b -> evaluateBoardProgression b inProgressState.Score
+                (board, score)//count full lines; change board and add score
+            let isBlockClashing block board = 
+                block                
+                |> Set.map (fun c -> XYArray.get c.X c.Y board)
+                |> Set.exists (fun field->field = Some Empty)
+                
+            let boardAfterBlockFallDown = fallDownBlock inProgressState.Board inProgressState.ActiveBlock
+            let (boardAfterLinesEval,score) = evaluateBoardProgression boardAfterBlockFallDown inProgressState.Score
+            let newActiveBlock = generateActiveBlock blocks random 10s<x>
+            if (isBlockClashing newActiveBlock boardAfterLinesEval) 
+            then 
+                End score
+            else
+                InProgress {Board =boardAfterLinesEval; ActiveBlock = newActiveBlock; Score=score}
 
     let print state = 
         match state with
