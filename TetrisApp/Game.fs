@@ -1,6 +1,7 @@
 module Game
     open XYArray
     open Domain
+    open ListExt
    
     let generateActiveBlock blockDef random (sizeX:int16<x>) =
         let el = ListExt.getRandomElement random blockDef
@@ -55,23 +56,38 @@ module Game
         | Left -> moveActiveBlock' inProgressState (-1s<x>,0s<y>)
         | Right -> moveActiveBlock' inProgressState (1s<x>,0s<y>)
 
-    let fallDownBlock inProgressState =
-        let findYShift (board:Board) (block:Block) =
+    let fallDownBlock (board:Board) (activeBlock:Block) =
+        let findYShift (board:Board) (block:Block) : int16<y> =
             let lowestBlockYCoordinates =
                 block
                 |> Set.toList
                 |> List.groupBy (fun c->c.X)
                 |> List.map (fun (_,col)-> List.minBy (fun c->c.Y) col)
+            let findNonEmptyY (xv:int16<x>) (startY:int16<y>) board = 
+                [(XYArray.removeUnit startY) .. 0s]
+                |> List.map XYArray.y.lift
+                |> List.map (fun yv -> (yv, XYArray.get xv yv board))
+                |> List.filter (fun (yv, bv) -> bv = Some Field.Block)
+                |> ListExt.maxBy (fun (yv,bv) -> yv)
+                |> Option.bind (fun (yv, bv)-> Some yv)
+            //find non empty board Y
             lowestBlockYCoordinates
-            |> List.map (fun c-> (c, XYArray.get c.X c.Y board))
-            |> List.map (fun (c,v)->c.Y-v.Value.Y)
-            |> List.min
+            |> List.map (fun c-> 
+                let yBoard = findNonEmptyY c.X c.Y board
+                let shift = match yBoard with
+                            | Some value -> c.Y-value
+                            | None -> c.Y
+                (c.Y, shift))
+            |> List.minBy (fun (y, shift) -> shift)
+            |> fst
 
-        let someY = findYShift inProgressState.Board inProgressState.ActiveBlock
-        let block = moveBlock (0s<x>, someY)
-        let newBoard = for c in block do
-            XYArray.set c inProgressState.Board
-        {inProgressState with Board = newBoard}
+        let someY = findYShift board activeBlock
+        let block = moveBlock activeBlock (0s<XYArray.x>, someY)
+        
+        let mutable newBoard = board
+        for c in block do
+            newBoard <- (XYArray.set c.X c.Y Field.Block newBoard).Value
+        newBoard
 
 
     let loop random userInput state = 
@@ -86,7 +102,13 @@ module Game
         | InProgress inProgressState, UserInput.Move direction ->
             InProgress (moveActiveBlock inProgressState direction)
         | InProgress inProgressState, UserInput.FallDown ->
-            InProgress (fallDownBlock inProgressState)
+            let boardProgression board score=
+                if true //decide: is it the end of game?
+                //count full lines; change board and add score
+                then InProgress {Board =board; ActiveBlock = (generateActiveBlock blocks random 10s<x>); Score=score}
+                else State.End score
+            let newBoard = fallDownBlock inProgressState.Board inProgressState.ActiveBlock
+            boardProgression newBoard inProgressState.Score
 
     let print state = 
         match state with

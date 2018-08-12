@@ -21,3 +21,11 @@ let mr = m |> loop (System.Random ()) (UserInput.Move Right)
 print m
 print ml
 print mr
+
+//falldown
+let f = loop (System.Random ()) (UserInput.Restart) Start
+let f1 = loop (System.Random ()) (UserInput.FallDown) f
+let f2 = loop (System.Random ()) (UserInput.FallDown) f1
+print f
+print f1
+print f2
