@@ -85,10 +85,8 @@ module Game
         let theSmallestShiftY = findYShift board activeBlock
         let block = moveBlock activeBlock (0s<XYArray.x>, theSmallestShiftY)
         
-        let mutable newBoard = board
-        for c in block do
-            newBoard <- (XYArray.set c.X c.Y Field.Block newBoard).Value
-        newBoard
+        let coords = block |> Set.toList |> List.map (fun c->(c.X,c.Y))
+        Option.get (XYArray.setMulti coords Field.Block board)
 
     let loop random userInput state = 
         match (state, userInput) with
