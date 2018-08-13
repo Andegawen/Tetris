@@ -59,3 +59,13 @@ module XYArray
             Some (init arr.maxX arr.maxY initEl)
         else
             None
+
+
+    let setMulti coords value board = 
+        let rec setMulti' cs board = 
+            match cs with
+            | (xv,yv) :: tail -> 
+                let newBoard = Option.bind (fun b-> set xv yv value b) board
+                setMulti' tail newBoard
+            | [] -> board
+        setMulti' coords (Some board)
