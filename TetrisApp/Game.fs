@@ -101,6 +101,15 @@ module Game
             InProgress (moveActiveBlock inProgressState direction)
         | InProgress inProgressState, UserInput.FallDown ->
             let evaluateBoardProgression board score=
+                // let xs = [0s .. (removeUnit board.maxX)] |> x.lift
+                // let ys = [(removeUnit board.maxY)-1s .. 0] |> y.lift
+                // let rowsToEvaluate =
+                //     ys 
+                //     |> List.map (fun yv -> 
+                //         (yv, xs |> List.forall (fun xv -> 
+                //                     XYArray.get xv yv board = Some Field.Block))
+                //     |> List.filter (fun (yv,isOneBlock)-> isOneBlock)
+                //     |> List.map fst
                 (board, score)//count full lines; change board and add score
             let isBlockClashing block board = 
                 block                
