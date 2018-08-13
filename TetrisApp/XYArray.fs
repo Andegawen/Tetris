@@ -69,3 +69,12 @@ module XYArray
                 setMulti' tail newBoard
             | [] -> board
         setMulti' coords (Some board)
+
+    let toSeq (arr: 'a xyArray) = 
+        let xs = [0s .. (removeUnit arr.maxX)] |> List.map x.lift
+        let ys = [0s .. (removeUnit arr.maxY)] |> List.map y.lift
+        seq {
+            for x in xs do
+                for y in ys do
+                    yield ((x,y), Option.get (get x y arr))
+        }
