@@ -71,7 +71,7 @@ module XYArray
             None
 
 
-    let setMulti coords value board = 
+    let setMulti value board coords = 
         let rec setMulti' cs board = 
             match cs with
             | (xv,yv) :: tail -> 
