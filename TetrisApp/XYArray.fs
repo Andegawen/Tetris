@@ -39,14 +39,24 @@ module XYArray
             let x, y = getXY point x
             f x y); maximumX = x }
 
+    let private get' (xv:int16<x>) yv arr =
+        let accessIndex = (int)(xv+yv*(arr.maximumX/1s<y>))
+        arr.arr.[accessIndex]
 
     let get (xv:int16<x>) yv arr = 
         if xv<arr.maximumX && yv<arr.maxY && xv >=0s<x> && yv >=0s<y>
         then
-            let accessIndex = (int)(xv+yv*(arr.maxX/1s<y>))
-            Some arr.arr.[accessIndex]
+            Some get'
         else
             None
+    let toSeq (arr: 'a xyArray) = 
+        let xs = [0s .. (removeUnit arr.maxX)] |> List.map x.lift
+        let ys = [0s .. (removeUnit arr.maxY)] |> List.map y.lift
+        seq {
+            for x in xs do
+                for y in ys do
+                    yield ((x,y), get' x y arr)
+        }
 
     let set (xv:int16<x>) (yv:int16<y>) value arr =         
         let initEl (x : int16<x>) (y:int16<y>) = 
@@ -69,12 +79,3 @@ module XYArray
                 setMulti' tail newBoard
             | [] -> board
         setMulti' coords (Some board)
-
-    let toSeq (arr: 'a xyArray) = 
-        let xs = [0s .. (removeUnit arr.maxX)] |> List.map x.lift
-        let ys = [0s .. (removeUnit arr.maxY)] |> List.map y.lift
-        seq {
-            for x in xs do
-                for y in ys do
-                    yield ((x,y), Option.get (get x y arr))
-        }
