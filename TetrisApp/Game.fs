@@ -100,21 +100,20 @@ module Game
         | InProgress inProgressState, UserInput.Move direction ->
             InProgress (moveActiveBlock inProgressState direction)
         | InProgress inProgressState, UserInput.FallDown ->
-            let evaluateBoardProgression board score=
-                // let xs = [0s .. (removeUnit board.maxX)] |> x.lift
-                // let ys = [(removeUnit board.maxY)-1s .. 0] |> y.lift
-                // let rowsToEvaluate =
-                //     ys 
-                //     |> List.map (fun yv -> 
-                //         (yv, xs |> List.forall (fun xv -> 
-                //                     XYArray.get xv yv board = Some Field.Block))
-                //     |> List.filter (fun (yv,isOneBlock)-> isOneBlock)
-                //     |> List.map fst
-                (board, score)//count full lines; change board and add score
-            let isBlockClashing block board = 
+            let evaluateBoardProgression board score =
+                // let groupedByX =
+                //     board
+                //     |> XYArray.toSeq
+                //     |> seq.groupBy (fun ((x,y),v)->x)
+                //     |> seq.toList
+                // let rows = 
+                //     groupedByX
+                //     |> List.filter (fun (g,c)->List.length c = board.maxX)
+                (board, score)
+            let isBlockClashing block board =
                 block                
                 |> Set.map (fun c -> XYArray.get c.X c.Y board)
-                |> Set.exists (fun field->field = Some Empty)
+                |> Set.exists (fun field -> field = (Some Field.Block))
                 
             let boardAfterBlockFallDown = fallDownBlock inProgressState.Board inProgressState.ActiveBlock
             let (boardAfterLinesEval,score) = evaluateBoardProgression boardAfterBlockFallDown inProgressState.Score
@@ -123,7 +122,7 @@ module Game
             then 
                 End score
             else
-                InProgress {Board =boardAfterLinesEval; ActiveBlock = newActiveBlock; Score=score}
+            InProgress {Board =boardAfterLinesEval; ActiveBlock = newActiveBlock; Score=score}
 
     let print state = 
         match state with
