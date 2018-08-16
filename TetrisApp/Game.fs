@@ -87,6 +87,38 @@ module Game
         
         let coords = block |> Set.toList |> List.map (fun c->(c.X,c.Y))
         Option.get (XYArray.setMulti Field.Block board coords)
+    let evaluateBoardProgression board score =
+        let blockBoardRepresentation = 
+            board
+            |> XYArray.toSeq
+            |> Seq.map (fun ((x,y),v)-> ({X=x;Y=y},v))
+            |> Seq.filter (fun (c,v)->v=(Some Field.Block))
+            |> Seq.map (fun (c,v)->c)
+            |> Seq.toList
+        let fullRows =
+            blockBoardRepresentation
+            |> List.groupBy (fun c->c.Y)
+            |> List.filter (fun (groupY,c)-> (int16)(List.length c) = (removeUnit board.maxY))
+            |> List.map (fun (groupY,c)-> groupY)
+            |> List.sort
+        let rec getRanges minY maxY ys =
+            match ys with
+            | el1 :: tail -> seq {yield (minY, el1); yield! (getRanges el1 maxY tail)}
+            | [] -> seq {yield (minY,maxY)}
+        let isInRange value range =
+            let a,b = range
+            abs(c.Y-a)+abs(b -c.Y) = abs(b-a)
+        let newBoard = 
+            let ranges =
+                fullRows 
+                |> getRanges 
+                |> List.mapi (fun (it,r) -> (it,r))
+            blockBoardRepresentation
+            |> List.groupBy(fun (c,v)-> 
+                Option.get (List.tryFind (fun (it,r)->isInRange c.Y r) ranges))
+            |> List.collect(fun ((it,r), group) -> group |> List.map(fun p->{p with Y=p.Y+it}))
+            |> XYArray.setMulti Field.Block board
+        (newBoard, score+(List.length fullRows)*100)
 
     let loop random userInput state = 
         match (state, userInput) with
@@ -100,35 +132,6 @@ module Game
         | InProgress inProgressState, UserInput.Move direction ->
             InProgress (moveActiveBlock inProgressState direction)
         | InProgress inProgressState, UserInput.FallDown ->
-            let evaluateBoardProgression board score =
-                let blockBoardRepresentation = 
-                    board
-                    |> XYArray.toSeq
-                    |> Seq.map (fun ((x,y),v)-> ({X=x;Y=y},v))
-                    |> Seq.filter (fun (c,v)->v=(Some Field.Block))
-                    |> Seq.map (fun (c,v)->c)
-                    |> Seq.toList
-                let fullRows =
-                    blockBoardRepresentation
-                    |> List.groupBy (fun c->c.Y)
-                    |> List.filter (fun (groupY,c)-> (int16)(List.length c) = (removeUnit board.maxY))
-                    |> List.map (fun (groupY,c)-> groupY)
-                    |> List.sort
-                let rec getRanges minY maxY ys =
-                    match ys with
-                    | el1 :: tail -> seq {yield (minY, el1); yield! (getRanges el1 maxY tail)}
-                    | [] -> seq {yield (minY,maxY)}
-                let newBoard = 
-                    let ranges =
-                        fullRows 
-                        |> getRanges 
-                        |> List.mapi (fun (it,r) -> (it,r))
-                    blockBoardRepresentation
-                    |> List.groupBy(fun (c,v)-> c.Y ranges)
-                    |> List.map() //map each group collection by moving it by relevant range
-                    |> XYArray.setMulti Field.Block board
-                (newBoard, score+(List.length fullRows)*100)
-
             let isBlockClashing block board =
                 block                
                 |> Set.map (fun c -> XYArray.get c.X c.Y board)
