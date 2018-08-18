@@ -35,20 +35,19 @@ print f3
 
 
 
-// let loadBoard str =
-//     initBoard
-// "
-// |     XXXXX          |
-// |                    |
-// |                    |
-// |XXX                 |
-// |            X       |
-// |           X X      |
-// |XXXXXXXXXXXX XXXXXXX|
-// |XXXXXXXXXXXXXXXXXXXX|
-// |XXXX   XXX    XXXXXX|
-// |XXXXXXXXXXXXXXXXXXXX|" |> loadBoard
-let blockFields = [0..9] |> List.map (fun v->(19s<x>, y.lift v))
-let board = Option.get (XYArray.setMulti Field.Block initBoard blockFields)
+let stringBoard =
+                    "                    \n"+
+                    "     XXXXX          \n"+
+                    "                    \n"+
+                    "                    \n"+
+                    "XXX                 \n"+
+                    "            X       \n"+
+                    "           X X      \n"+
+                    "XXXXXXXXXXXX XXXXXXX\n"+
+                    "XXXXXXXXXXXXXXXXXXXX\n"+
+                    "XXXX   XXX    XXXXXX\n"+
+                    "XXXXXXXXXXXXXXXXXXXX"
+let board = XYArray.fromString (fun c->if c='X' then Field.Block else Field.Empty) stringBoard |> Option.get
 let score0 = Score 0u
 let b,s = evaluateBoardProgression board score0 
+printfn "%s" (XYArray.toString (fun f -> if f=Field.Block then "X" else " ") b)
