@@ -107,7 +107,7 @@ module Game
             | [] -> seq {yield (minY,maxY)}
         let isInRange (value:int16<y>) (r:int16<y>*int16<y>) =
             let a,b =r
-            let lhs = abs(value-a)+abs(b -value)
+            let lhs = abs(value-a)+abs(b-value)
             let rhs = abs(b-a)
             lhs = rhs
         let newBoard = 
