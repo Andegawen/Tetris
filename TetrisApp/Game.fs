@@ -134,6 +134,7 @@ module Game
         | _, UserInput.Restart -> InProgress {Board = initBoard; Score= Score 0u; ActiveBlock=(generateActiveBlock blocks random 10s<x>)}
         | Start, _
         | End _, _ -> state
+        | InProgress st, UserInput.Exit -> End st.Score
         | InProgress _, UserInput.None -> 
             state
         | InProgress inProgressState, UserInput.Rotate direction ->
@@ -150,10 +151,14 @@ module Game
             let (boardAfterLinesEval,newScore) = evaluateBoardProgression boardAfterBlockFallDown inProgressState.Score
             let newActiveBlock = generateActiveBlock blocks random 10s<x>
             if (isBlockClashing newActiveBlock boardAfterLinesEval) 
-            then 
+            then
                 End newScore
             else
-            InProgress {Board =boardAfterLinesEval; ActiveBlock = newActiveBlock; Score=newScore}
+                InProgress {
+                    Board = boardAfterLinesEval
+                    ActiveBlock = newActiveBlock
+                    Score=newScore
+                    }
 
     let print state = 
         match state with
