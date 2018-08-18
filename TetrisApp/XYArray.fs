@@ -43,10 +43,10 @@ module XYArray
         let accessIndex = (int)(xv+yv*(arr.maximumX/1s<y>))
         arr.arr.[accessIndex]
 
-    let get (xv:int16<x>) yv arr = 
+    let get (xv:int16<x>) (yv:int16<y>) arr = 
         if xv<arr.maximumX && yv<arr.maxY && xv >=0s<x> && yv >=0s<y>
         then
-            Some get'
+            Some (get' xv yv arr)
         else
             None
     let toSeq (arr: 'a xyArray) = 

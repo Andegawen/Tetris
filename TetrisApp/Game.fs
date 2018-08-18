@@ -68,7 +68,7 @@ module Game
                 [(XYArray.removeUnit startY) .. (XYArray.removeUnit board.maxY)-1s]
                 |> List.map XYArray.y.lift
                 |> List.map (fun yv -> (yv, XYArray.get xv yv board))
-                |> List.filter (fun (yv, bv) -> bv = Some Field.Block)
+                |> List.filter (fun (yv, bv) -> bv = (Some Domain.Field.Block))
                 |> ListExt.minBy (fun (yv,bv) -> yv)
                 |> Option.bind (fun (yv, bv)-> Some yv)
             
@@ -87,12 +87,12 @@ module Game
         
         let coords = block |> Set.toList |> List.map (fun c->(c.X,c.Y))
         Option.get (XYArray.setMulti Field.Block board coords)
-    let evaluateBoardProgression board score =
+    let evaluateBoardProgression board (score:Score) :(Board*Score) =
         let blockBoardRepresentation = 
             board
             |> XYArray.toSeq
             |> Seq.map (fun ((x,y),v)-> ({X=x;Y=y},v))
-            |> Seq.filter (fun (c,v)->v=(Some Field.Block))
+            |> Seq.filter (fun (c,v)->v= Field.Block)
             |> Seq.map (fun (c,v)->c)
             |> Seq.toList
         let fullRows =
@@ -105,20 +105,29 @@ module Game
             match ys with
             | el1 :: tail -> seq {yield (minY, el1); yield! (getRanges el1 maxY tail)}
             | [] -> seq {yield (minY,maxY)}
-        let isInRange value range =
-            let a,b = range
-            abs(c.Y-a)+abs(b -c.Y) = abs(b-a)
+        let isInRange (value:int16<y>) (r:int16<y>*int16<y>) =
+            let a,b =r
+            let lhs = abs(value-a)+abs(b -value)
+            let rhs = abs(b-a)
+            lhs = rhs
         let newBoard = 
             let ranges =
                 fullRows 
-                |> getRanges 
-                |> List.mapi (fun (it,r) -> (it,r))
+                |> getRanges 0s<y> board.maxY
+                |> Seq.toList
+                |> Seq.mapi (fun it (min, max) -> (it, (min, max)))
+                |> Seq.toList
             blockBoardRepresentation
-            |> List.groupBy(fun (c,v)-> 
-                Option.get (List.tryFind (fun (it,r)->isInRange c.Y r) ranges))
-            |> List.collect(fun ((it,r), group) -> group |> List.map(fun p->{p with Y=p.Y+it}))
+            |> List.groupBy(fun c-> 
+                Option.get (List.tryFind (fun (it,r)->isInRange (c.Y) r) ranges))
+            |> List.collect(fun ((it,_), group) -> List.map(fun p->{p with Y=p.Y+y.lift it}) group)
+            |> List.map (fun s->(s.X, s.Y))
             |> XYArray.setMulti Field.Block board
-        (newBoard, score+(List.length fullRows)*100)
+            |> Option.get
+        let scoreValue = (Score.getValue score);
+        let valueToAdd = (List.length fullRows)*100
+        let newscore = Score (scoreValue + (uint32)(valueToAdd))
+        (newBoard, newscore)
 
     let loop random userInput state = 
         match (state, userInput) with
@@ -136,15 +145,15 @@ module Game
                 block                
                 |> Set.map (fun c -> XYArray.get c.X c.Y board)
                 |> Set.exists (fun field -> field = (Some Field.Block))
-                
+
             let boardAfterBlockFallDown = fallDownBlock inProgressState.Board inProgressState.ActiveBlock
-            let (boardAfterLinesEval,score) = evaluateBoardProgression boardAfterBlockFallDown inProgressState.Score
+            let (boardAfterLinesEval,newScore) = evaluateBoardProgression boardAfterBlockFallDown inProgressState.Score
             let newActiveBlock = generateActiveBlock blocks random 10s<x>
             if (isBlockClashing newActiveBlock boardAfterLinesEval) 
             then 
-                End score
+                End newScore
             else
-            InProgress {Board =boardAfterLinesEval; ActiveBlock = newActiveBlock; Score=score}
+            InProgress {Board =boardAfterLinesEval; ActiveBlock = newActiveBlock; Score=newScore}
 
     let print state = 
         match state with

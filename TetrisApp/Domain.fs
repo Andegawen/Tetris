@@ -9,6 +9,7 @@ module Domain
     let initBoard = XYArray.init  20s<x> 10s<y> (fun _ _ -> Empty)
 
     type Score = Score of uint32
+                  static member getValue (Score a) = a
     type InProgress = { Board:Board; Score:Score; ActiveBlock:Block }
     type State = Start | InProgress of InProgress | End of Score
 
