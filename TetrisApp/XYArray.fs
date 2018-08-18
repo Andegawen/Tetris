@@ -50,8 +50,8 @@ module XYArray
         else
             None
     let toSeq (arr: 'a xyArray) = 
-        let xs = [0s .. (removeUnit arr.maxX)] |> List.map x.lift
-        let ys = [0s .. (removeUnit arr.maxY)] |> List.map y.lift
+        let xs = [0s .. (removeUnit arr.maxX)-1s] |> List.map x.lift
+        let ys = [0s .. (removeUnit arr.maxY)-1s] |> List.map y.lift
         seq {
             for x in xs do
                 for y in ys do

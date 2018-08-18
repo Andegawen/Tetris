@@ -13,6 +13,8 @@ XYArray.get 2s<x> 3s<y> arr = None
 XYArray.get 1s<x> 1s<y> arr = (Some 1)
 XYArray.get 2s<x> 1s<y> arr = (Some 2)
 
+printfn "array as an seq: %A" (XYArray.toSeq arr)
+
 
 let newXOutOfBound = XYArray.set 5s<x> 1s<y> 13 arr 
 newXOutOfBound = None
