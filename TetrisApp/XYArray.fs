@@ -79,3 +79,33 @@ module XYArray
                 setMulti' tail newBoard
             | [] -> board
         setMulti' coords (Some board)
+    let toString (f:'a->string) (board: 'a xyArray) =
+        let ys = [0s .. (int16)board.maxY - 1s] |> List.map (y.lift)
+        let xs = [0s .. (int16)board.maxX  - 1s] |> List.map (x.lift)
+        let s = seq { for y in ys do
+                        yield '|'
+                        for x in xs do
+                            yield! f (get' x y board)
+                        yield '|'
+                        yield '\n' }
+        System.String.Concat s
+    let fromString (f:char->'a) (str:string) =
+        let rows = str.Split('\n')
+        let z = 
+            rows 
+            |> Array.map (fun r-> 
+                                 let chars = r.ToCharArray()
+                                 (Array.length chars, chars |> Array.map f))
+        let s = Set.ofArray (Array.map (fst) z)
+        if Set.count s = 1
+        then
+            let initFunc xv yv maxX (arr:'a array)= 
+                let accessIndex = (int)(xv+yv*(maxX/1s<y>))
+                arr.[accessIndex]
+
+            let x = s |> Set.toList |> List.head |> x.lift
+            let y = Array.length rows |> y.lift
+            let normalArray = z |> Array.collect snd
+            Some (init x y (fun xv yv -> initFunc xv yv x normalArray))
+        else
+            None        

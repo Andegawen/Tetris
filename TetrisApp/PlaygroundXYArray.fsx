@@ -8,6 +8,8 @@ let initEl (x : int16<x>) (y:int16<y>) =
 
 let arr = XYArray.init 3s<x> 2s<y> initEl
 
+XYArray.toString (fun el->el.ToString()) arr
+
 XYArray.get 4s<x> 1s<y> arr = None
 XYArray.get 2s<x> 3s<y> arr = None
 XYArray.get 1s<x> 1s<y> arr = (Some 1)
@@ -35,3 +37,9 @@ XYArray.get 0s<x> 0s<y> boardWithChanges = Some 1
 XYArray.get 1s<x> 1s<y> boardWithChanges = Some 1
 XYArray.get 2s<x> 2s<y> boardWithChanges = Some 1
 XYArray.get 0s<x> 1s<y> boardWithChanges = Some 0
+
+
+let someArr = "001122\n"+
+              "002233";
+let arrFromString = XYArray.fromString (fun c->System.Int32.Parse(c.ToString())) someArr
+XYArray.toString (fun i->i.ToString()) (Option.get arrFromString)
