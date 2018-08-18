@@ -32,3 +32,23 @@ print f
 print f1
 print f2
 print f3
+
+
+
+// let loadBoard str =
+//     initBoard
+// "
+// |     XXXXX          |
+// |                    |
+// |                    |
+// |XXX                 |
+// |            X       |
+// |           X X      |
+// |XXXXXXXXXXXX XXXXXXX|
+// |XXXXXXXXXXXXXXXXXXXX|
+// |XXXX   XXX    XXXXXX|
+// |XXXXXXXXXXXXXXXXXXXX|" |> loadBoard
+let blockFields = [0..9] |> List.map (fun v->(19s<x>, y.lift v))
+let board = Option.get (XYArray.setMulti Field.Block initBoard blockFields)
+let score0 = Score 0u
+let b,s = evaluateBoardProgression board score0 
