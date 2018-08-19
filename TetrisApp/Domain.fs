@@ -21,6 +21,9 @@ module Domain
         [
             [ "XXX"
               "  X"];
+            
+            [ "XXX"
+              "X  "];
 
             [ "XX"
               "XX" ];
@@ -32,6 +35,9 @@ module Domain
 
            [ "XX"
              " XX"];
+
+           [ " XX"
+             "XX"];
         ] |> List.map 
             (List.mapi (fun yv -> 
                     Seq.mapi (fun xv ch -> if ch = ' ' then None else  Some {X = x.lift xv; Y = y.lift yv}) 
