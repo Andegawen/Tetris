@@ -98,31 +98,39 @@ module Game
         let fullRows =
             blockBoardRepresentation
             |> List.groupBy (fun c->c.Y)
-            |> List.filter (fun (groupY,c)-> (int16)(List.length c) = (removeUnit board.maxY))
+            |> List.filter (fun (groupY,c)-> (int16)(List.length c) = (removeUnit board.maxX))
             |> List.map (fun (groupY,c)-> groupY)
             |> List.sort
-        let rec getRanges minY maxY ys =
-            match ys with
-            | el1 :: tail -> seq {yield (minY, el1); yield! (getRanges el1 maxY tail)}
-            | [] -> seq {yield (minY,maxY)}
-        let isInRange (value:int16<y>) (r:int16<y>*int16<y>) =
-            let a,b =r
-            let lhs = abs(value-a)+abs(b-value)
-            let rhs = abs(b-a)
-            lhs = rhs
+        printfn "FR: %A" fullRows
+        let getRanges minY maxY ys =
+            let rec getRanges' minY maxY ys =
+                match ys with
+                | el1 :: tail -> seq {yield (minY, el1); yield! (getRanges' el1 maxY tail)}
+                | [] -> seq {yield (minY,maxY)}
+            getRanges' minY maxY ys |> Seq.filter (fun (r1,r2)->r1<>r2)
         let newBoard = 
-            let ranges =
-                fullRows 
-                |> getRanges 0s<y> board.maxY
-                |> Seq.toList
-                |> Seq.mapi (fun it (min, max) -> (it, (min, max)))
-                |> Seq.toList
-            blockBoardRepresentation
-            |> List.groupBy(fun c-> 
-                Option.get (List.tryFind (fun (it,r)->isInRange (c.Y) r) ranges))
-            |> List.collect(fun ((it,_), group) -> List.map(fun p->{p with Y=p.Y+y.lift it}) group)
+            let shiftToRanges =
+                let ranges = fullRows 
+                            |> getRanges 0s<y> (board.maxY-1s<y>)
+                            |> Seq.toList;
+                let rangeMax = (List.length ranges)-1
+                ranges |> List.mapi (fun it (min, max) -> (y.lift (rangeMax-it), (min, max)))
+            printfn "ranges: %A" shiftToRanges
+            let isInRange (value:int16<y>) (r:int16<y>*int16<y>) =
+                let a,b =r
+                let lhs = abs(value-a)+abs(b-value)
+                let rhs = abs(b-a)
+                lhs = rhs
+            let bibi = 
+                blockBoardRepresentation
+                |> List.filter (fun c-> not(List.contains c.Y fullRows))
+                |> List.groupBy(fun c-> 
+                    fst (Option.get (List.tryFind (fun (_,r)->isInRange (c.Y) r) shiftToRanges)))
+                |> List.collect(fun (shift, group) -> List.map(fun p->{p with Y=p.Y+shift}) group)
+            printfn "%A" bibi
+            bibi
             |> List.map (fun s->(s.X, s.Y))
-            |> XYArray.setMulti Field.Block board
+            |> XYArray.setMulti Field.Block initBoard
             |> Option.get
         let scoreValue = (Score.getValue score);
         let valueToAdd = (List.length fullRows)*100

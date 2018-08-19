@@ -6,10 +6,8 @@
   <ItemGroup>
     <Compile Include="XYArray.fs" />
     <Compile Include="ListExt.fs" />
-    <Compile Include="PlaygroundXYArray.fsx" />
     <Compile Include="Domain.fs" />
     <Compile Include="Game.fs" />
-    <Compile Include="PlaygroundGame.fsx" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 </Project>

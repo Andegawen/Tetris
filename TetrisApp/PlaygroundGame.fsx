@@ -32,22 +32,3 @@ print f
 print f1
 print f2
 print f3
-
-
-
-let stringBoard =
-                    "                    \n"+
-                    "     XXXXX          \n"+
-                    "                    \n"+
-                    "                    \n"+
-                    "XXX                 \n"+
-                    "            X       \n"+
-                    "           X X      \n"+
-                    "XXXXXXXXXXXX XXXXXXX\n"+
-                    "XXXXXXXXXXXXXXXXXXXX\n"+
-                    "XXXX   XXX    XXXXXX\n"+
-                    "XXXXXXXXXXXXXXXXXXXX"
-let board = XYArray.fromString (fun c->if c='X' then Field.Block else Field.Empty) stringBoard |> Option.get
-let score0 = Score 0u
-let b,s = evaluateBoardProgression board score0 
-printfn "%s" (XYArray.toString (fun f -> if f=Field.Block then "X" else " ") b)
