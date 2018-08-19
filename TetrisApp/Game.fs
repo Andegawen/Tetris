@@ -101,7 +101,6 @@ module Game
             |> List.filter (fun (groupY,c)-> (int16)(List.length c) = (removeUnit board.maxX))
             |> List.map (fun (groupY,c)-> groupY)
             |> List.sort
-        printfn "FR: %A" fullRows
         let getRanges minY maxY ys =
             let rec getRanges' minY maxY ys =
                 match ys with
@@ -115,20 +114,16 @@ module Game
                             |> Seq.toList;
                 let rangeMax = (List.length ranges)-1
                 ranges |> List.mapi (fun it (min, max) -> (y.lift (rangeMax-it), (min, max)))
-            printfn "ranges: %A" shiftToRanges
             let isInRange (value:int16<y>) (r:int16<y>*int16<y>) =
                 let a,b =r
                 let lhs = abs(value-a)+abs(b-value)
                 let rhs = abs(b-a)
                 lhs = rhs
-            let bibi = 
-                blockBoardRepresentation
-                |> List.filter (fun c-> not(List.contains c.Y fullRows))
-                |> List.groupBy(fun c-> 
-                    fst (Option.get (List.tryFind (fun (_,r)->isInRange (c.Y) r) shiftToRanges)))
-                |> List.collect(fun (shift, group) -> List.map(fun p->{p with Y=p.Y+shift}) group)
-            printfn "%A" bibi
-            bibi
+            blockBoardRepresentation
+            |> List.filter (fun c-> not(List.contains c.Y fullRows))
+            |> List.groupBy(fun c-> 
+                fst (Option.get (List.tryFind (fun (_,r)->isInRange (c.Y) r) shiftToRanges)))
+            |> List.collect(fun (shift, group) -> List.map(fun p->{p with Y=p.Y+shift}) group)
             |> List.map (fun s->(s.X, s.Y))
             |> XYArray.setMulti Field.Block initBoard
             |> Option.get
