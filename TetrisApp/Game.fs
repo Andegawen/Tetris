@@ -2,6 +2,7 @@ module Game
     open XYArray
     open Domain
     open ListExt
+    open System
    
     let generateActiveBlock blockDef random (sizeX:int16<x>) =
         let el = ListExt.getRandomElement random blockDef
@@ -14,26 +15,45 @@ module Game
                 && c.Y<=inProgressState.Board.maxY
                 && c.Y >= 0s<y>)
 
-    let rotateActiveBlock inProgressState direction = 
-        let rotateBlock (block:Block) (angle:float) : Block=
-            let elXmin = block |> Set.toList |> List.minBy (fun c->c.X);
-            let elYmax = block |> Set.toList |> List.maxBy (fun c->c.Y);
-            let shift = {X=elXmin.X; Y=elYmax.Y}
-            block 
-            |> Set.map (fun c -> 
-                let coordinateShiftedToOrigin = {X= (c.X - shift.X); Y = (c.Y - shift.Y)}
-                let xv = XYArray.removeUnit coordinateShiftedToOrigin.X
-                let yv = XYArray.removeUnit coordinateShiftedToOrigin.Y
-                let cooridinateRotatedInOrigin = {
-                    X=x.lift(xv * (int16) (cos angle) - yv  * (int16) (sin angle));
-                    Y=y.lift(yv * (int16) (cos angle) + xv * (int16) (sin angle))
-                }
-                let coordinateRotatedAndShiftedToOriginal = 
-                    {X= cooridinateRotatedInOrigin.X + shift.X; Y=cooridinateRotatedInOrigin.Y + shift.Y}
-                coordinateRotatedAndShiftedToOriginal)
+    let leftTopRotationPoint (block:Block) =
+        let blockList = block |> Set.toList
+        let elXmin = blockList |> List.minBy (fun c-> c.X);
+        let elYmax = blockList |> List.maxBy (fun c-> c.Y);
+        {X=elXmin.X; Y=elYmax.Y}
+    
+    let centerRotationPoint (block:Block)=
+            let blockList = block |> Set.toList
+            let elXmin = blockList |> List.minBy (fun c->c.X);
+            let elXmax = blockList |> List.maxBy (fun c->c.X);
+            let elYmin = blockList |> List.minBy (fun c->c.Y);
+            let elYmax = blockList |> List.maxBy (fun c->c.Y);
 
+            let xv=Math.Round((double)(elXmax.X-elXmin.X)/2.0, MidpointRounding.AwayFromZero)
+            let yv=Math.Round((double)(elYmax.Y-elYmin.Y)/2.0, MidpointRounding.AwayFromZero)
+            let x = (int)xv |> x.lift
+            let y = (int)yv |> y.lift
+            let rotPoint = {X=elXmin.X+x; Y=elYmin.Y+y}
+            printfn "%A" rotPoint
+            rotPoint
+    let private rotateBlockDueToPoint (block:Block) (angle:float) (rotationPointDueToOrigin:Block->Coordinate): Block=
+        let shift = rotationPointDueToOrigin(block)
+        block 
+        |> Set.map (fun c -> 
+            let coordinateShiftedToOrigin = {X= (c.X - shift.X); Y = (c.Y - shift.Y)}
+            let xv = XYArray.removeUnit coordinateShiftedToOrigin.X
+            let yv = XYArray.removeUnit coordinateShiftedToOrigin.Y
+            let cooridinateRotatedInOrigin = {
+                X=x.lift(xv * (int16) (cos angle) - yv  * (int16) (sin angle));
+                Y=y.lift(yv * (int16) (cos angle) + xv * (int16) (sin angle))
+            }
+            let coordinateRotatedAndShiftedToOriginal = 
+                {X= cooridinateRotatedInOrigin.X + shift.X; Y=cooridinateRotatedInOrigin.Y + shift.Y}
+            coordinateRotatedAndShiftedToOriginal)
+    
+        
+    let rotateActiveBlock inProgressState direction = 
         let rotateActiveBlock' inProgressState angle=
-            let ab=rotateBlock inProgressState.ActiveBlock angle
+            let ab=rotateBlockDueToPoint inProgressState.ActiveBlock angle centerRotationPoint
             if isBlockInBound inProgressState ab then
                 {inProgressState with ActiveBlock=ab}
             else inProgressState

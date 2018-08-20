@@ -7,7 +7,13 @@ open Domain
 open Game
 
 //rotation
-let r = loop (System.Random ()) (UserInput.Restart) Start
+let randomState = loop (System.Random ()) (UserInput.Restart) Start
+let centerActiveBlock state= 
+    match state with
+    | InProgress progress -> InProgress{progress with ActiveBlock=progress.ActiveBlock |> Set.map(fun c->{c with Y=c.Y+5s<y>})}
+    | _ -> state
+
+let r = centerActiveBlock randomState
 let rl = r |> loop (System.Random ()) (UserInput.Rotate Left)
 let rr = r |> loop (System.Random ()) (UserInput.Rotate Right)
 print r
