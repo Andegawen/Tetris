@@ -195,15 +195,16 @@ module Game
             | InProgress progress -> 
                 let sb = StringBuilder()
                 for y in [0s .. (int16)progress.Board.maxY - 1s] |> List.map (y.lift) do
-                    sb.Append "|"
+                    sb.Append "|" |> ignore
                     for x in [0s .. (int16)progress.Board.maxX  - 1s] |> List.map (x.lift) do
                         if progress.ActiveBlock.Contains { X = x; Y= y} 
-                            then sb.Append "X" 
-                            else if XYArray.get x y progress.Board = Some Empty then sb.Append " " else sb.Append "*"
-                    sb.AppendLine "|"
+                            then sb.Append "X" |> ignore
+                            else 
+                                ignore <| if XYArray.get x y progress.Board = Some Empty then sb.Append " " else sb.Append "*"
+                    sb.AppendLine "|" |> ignore
                 let (Score score) = progress.Score
-                sb.AppendLine (sprintf "Score: %d" score)
-                sb.AppendLine <| sprintf "%A" progress.ActiveBlock
+                sb.AppendLine <| sprintf "Score: %d" score |> ignore
+                sb.AppendLine <| sprintf "%A" progress.ActiveBlock |> ignore
                 Console.Write( sb.ToString())
             | End (Score score) -> printfn "Score: %d" score
         }
