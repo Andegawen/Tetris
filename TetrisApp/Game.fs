@@ -52,22 +52,22 @@ module Game
             coordinateRotatedAndShiftedToOriginal)
     
         
-    let rotateActiveBlock inProgressState direction = 
+    let rotateActiveBlock inProgressState rotateDirection = 
         let rotateActiveBlock' inProgressState angle=
             let ab=rotateBlockDueToPoint inProgressState.ActiveBlock angle centerRotationPoint
             if isBlockInBound inProgressState ab then
                 {inProgressState with ActiveBlock=ab}
             else inProgressState
-        match direction with
-        | Left -> rotateActiveBlock' inProgressState (System.Math.PI/2.0)
-        | Right -> rotateActiveBlock' inProgressState (-System.Math.PI/2.0)
+        match rotateDirection with
+        | CCW -> rotateActiveBlock' inProgressState (System.Math.PI/2.0)
+        | CW -> rotateActiveBlock' inProgressState (-System.Math.PI/2.0)
 
     let moveBlock block shift =
         let (x,y) = shift
         block
         |> Set.map (fun c -> {X=c.X+x; Y=c.Y+y})
+
     let moveActiveBlock inProgressState direction =
-        
         let moveActiveBlock' inProgressState shift = 
             let ab=moveBlock inProgressState.ActiveBlock shift
             if isBlockInBound inProgressState ab then
@@ -76,6 +76,7 @@ module Game
         match direction with
         | Left -> moveActiveBlock' inProgressState (-1s<x>,0s<y>)
         | Right -> moveActiveBlock' inProgressState (1s<x>,0s<y>)
+        | Down -> moveActiveBlock' inProgressState (0s<x>,1s<y>)
 
     let fallDownBlock (board:Board) (activeBlock:Block) =
         let findYShift (board:Board) (block:Block) : int16<y> =
@@ -217,11 +218,12 @@ module Game
         let result = 
             match key.Key with
             | ConsoleKey.S -> UserInput.Restart
-            | ConsoleKey.Z -> UserInput.Rotate Direction.Right
-            | ConsoleKey.X -> UserInput.Rotate Direction.Left
+            | ConsoleKey.Z -> UserInput.Rotate RotateDirection.CCW
+            | ConsoleKey.X -> UserInput.Rotate RotateDirection.CW
             | ConsoleKey.Spacebar -> UserInput.FallDown
             | ConsoleKey.RightArrow -> UserInput.Move Direction.Right
             | ConsoleKey.LeftArrow -> UserInput.Move Direction.Left
+            | ConsoleKey.DownArrow -> UserInput.Move Direction.Down
             | ConsoleKey.Escape -> UserInput.Exit
             | _ -> UserInput.None
         return result
