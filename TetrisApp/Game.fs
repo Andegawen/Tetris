@@ -10,11 +10,10 @@ module Game
         el |> Set.map (fun c -> { c with X=c.X+(sizeX/2s) })
     
     let isBlockInBound inProgressState block =
-            block |> Set.forall (fun c -> 
-                c.X<inProgressState.Board.maxX
-                && c.X >= 0s<x>
-                && c.Y<inProgressState.Board.maxY
-                && c.Y >= 0s<y>)
+        let isCoordinateInBoardFrame (board:Board) coordinate =
+            XYArray.get coordinate.X coordinate.Y board 
+            |> Option.map (fun field -> field = Field.Empty) = Some true
+        block |> Set.forall (fun c -> isCoordinateInBoardFrame inProgressState.Board c)
 
     let leftTopRotationPoint (block:Block) =
         let blockList = block |> Set.toList
