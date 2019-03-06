@@ -8,16 +8,18 @@ module Domain
 
     let initBoard = XYArray.init  20s<x> 10s<y> (fun _ _ -> Empty)
 
+    type TimedownCounter = int
+
     type Score = Score of uint32
                   static member getValue (Score a) = a
-    type InProgress = { Board:Board; Score:Score; ActiveBlock:Block }
+    type InProgress = { Board:Board; Score:Score; ActiveBlock:Block; NextDownfallCounter:TimedownCounter }
     type State = Start | InProgress of InProgress | End of Score
 
     type Direction = Left | Right
     [<RequireQualifiedAccess>]
     type UserInput = None | Move of Direction | Rotate of Direction | FallDown | Exit | Restart
 
-    let blocks = 
+    let blocks : Block list = 
         [
             [ "XXX"
               "  X"];

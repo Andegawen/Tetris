@@ -3,6 +3,7 @@ module Game
     open Domain
     open ListExt
     open System
+    open System.Text
    
     let generateActiveBlock blockDef random (sizeX:int16<x>) =
         let el = ListExt.getRandomElement random blockDef
@@ -152,9 +153,9 @@ module Game
         let newscore = Score (scoreValue + (uint32)(valueToAdd))
         (newBoard, newscore)
 
-    let loop random userInput state = 
+    let nextState random userInput state = 
         match (state, userInput) with
-        | _, UserInput.Restart -> InProgress {Board = initBoard; Score= Score 0u; ActiveBlock=(generateActiveBlock blocks random 10s<x>)}
+        | _, UserInput.Restart -> InProgress {Board = initBoard; Score= Score 0u; ActiveBlock=(generateActiveBlock blocks random 10s<x>); NextDownfallCounter=10}
         | Start, _
         | End _, _ -> state
         | InProgress st, UserInput.Exit -> End st.Score
@@ -181,20 +182,65 @@ module Game
                     Board = boardAfterLinesEval
                     ActiveBlock = newActiveBlock
                     Score=newScore
+                    NextDownfallCounter=inProgressState.NextDownfallCounter
                     }
 
-    let print state = 
+    let print state : Async<unit> = 
+        async{
+            do! Async.Sleep 50
+            Console.Clear()
+            match state with
+            | Start -> printfn "Press s to start"
+            | InProgress progress -> 
+                let sb = StringBuilder()
+                for y in [0s .. (int16)progress.Board.maxY - 1s] |> List.map (y.lift) do
+                    sb.Append "|"
+                    for x in [0s .. (int16)progress.Board.maxX  - 1s] |> List.map (x.lift) do
+                        if progress.ActiveBlock.Contains { X = x; Y= y} 
+                            then sb.Append "X" 
+                            else if XYArray.get x y progress.Board = Some Empty then sb.Append " " else sb.Append "*"
+                    sb.AppendLine "|"
+                let (Score score) = progress.Score
+                sb.AppendLine (sprintf "Score: %d" score)
+                sb.AppendLine <| sprintf "%A" progress.ActiveBlock
+                Console.Write( sb.ToString())
+            | End (Score score) -> printfn "Score: %d" score
+        }
+
+
+    let readKeys : Async<UserInput> = async {
+        let mutable key = ConsoleKeyInfo();
+        
+        while (Console.KeyAvailable) do
+            key <- Console.ReadKey(true)
+
+        let result = 
+            match key.Key with
+            | ConsoleKey.S -> UserInput.Restart
+            | ConsoleKey.Z -> UserInput.Rotate Direction.Right
+            | ConsoleKey.X -> UserInput.Rotate Direction.Left
+            | ConsoleKey.Spacebar -> UserInput.FallDown
+            | ConsoleKey.RightArrow -> UserInput.Move Direction.Right
+            | ConsoleKey.LeftArrow -> UserInput.Move Direction.Left
+            | ConsoleKey.Escape -> UserInput.Exit
+            | _ -> UserInput.None
+        return result
+    }
+
+    let isEnd state =
         match state with
-        | Start -> printfn "Press s to start"
-        | InProgress progress -> 
-            for y in [0s .. (int16)progress.Board.maxY - 1s] |> List.map (y.lift) do
-                printf "|"
-                for x in [0s .. (int16)progress.Board.maxX  - 1s] |> List.map (x.lift) do
-                    if progress.ActiveBlock.Contains { X = x; Y= y} 
-                        then "X" 
-                        else if XYArray.get x y progress.Board = Some Empty then " " else "*"
-                    |> printf "%s" 
-                printfn "|"
-            let (Score score) = progress.Score in printfn "Score: %d" score
-            printfn "%A" progress.ActiveBlock
-        | End (Score score) -> printfn "Score: %d" score
+        | State.End _ -> true
+        | _ -> false
+
+    let play = 
+        let r = System.Random 0
+        let mutable state = State.Start
+        print state |> Async.RunSynchronously
+        async{
+        while (not (isEnd state)) do    
+                let! input = readKeys
+                state <- nextState r input state
+                print state |> Async.RunSynchronously
+        } |> Async.RunSynchronously
+            
+            
