@@ -11,9 +11,9 @@ module Game
     
     let isBlockInBound inProgressState block =
             block |> Set.forall (fun c -> 
-                c.X<=inProgressState.Board.maxX
+                c.X<inProgressState.Board.maxX
                 && c.X >= 0s<x>
-                && c.Y<=inProgressState.Board.maxY
+                && c.Y<inProgressState.Board.maxY
                 && c.Y >= 0s<y>)
 
     let leftTopRotationPoint (block:Block) =
@@ -109,6 +109,7 @@ module Game
         
         let coords = block |> Set.toList |> List.map (fun c->(c.X,c.Y))
         Option.get (XYArray.setMulti Field.Block board coords)
+
     let evaluateBoardProgression board (score:Score) :(Board*Score) =
         let blockBoardRepresentation = 
             board
