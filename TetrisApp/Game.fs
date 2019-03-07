@@ -77,6 +77,8 @@ module Game
         | Right -> moveActiveBlock' inProgressState (1s<x>, 0s<y>)
         | Down -> moveActiveBlock' inProgressState (0s<x>, 1s<y>)
 
+    // ToDo problem with a first line in the board! Non empty field above don't go down!
+    // it's not the issue for other lines
     let fallDownBlock (board:Board) (activeBlock:Block) =
         let findYShift (board:Board) (block:Block) : int16<y> =
             let ``x to the most bottom Y from block`` =
