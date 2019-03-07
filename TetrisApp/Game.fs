@@ -79,7 +79,7 @@ module Game
 
     // ToDo problem with a first line in the board! Non empty field above don't go down!
     // it's not the issue for other lines
-    let fallDownBlock (board:Board) (activeBlock:Block) =
+    let fallDownBlock (board:Board) (activeBlock:Block)  : Board=
         let findYShift (board:Board) (block:Block) : int16<y> =
             let ``x to the most bottom Y from block`` =
                 block
