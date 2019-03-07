@@ -159,6 +159,7 @@ module Game
     let nextState random userInput state = 
         match (state, userInput) with
         | _, UserInput.Restart -> InProgress {Board = initBoard; Score= Score 0u; ActiveBlock=(generateActiveBlock blocks random 10s<x>); NextDownfallCounter=10}
+        | Start, UserInput.Exit -> End <| Score 0u
         | Start, _
         | End _, _ -> state
         | InProgress st, UserInput.Exit -> End st.Score
