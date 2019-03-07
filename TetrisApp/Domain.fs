@@ -13,12 +13,23 @@ module Domain
     type Score = Score of uint32
                   static member getValue (Score a) = a
     type InProgress = { Board:Board; Score:Score; ActiveBlock:Block; NextDownfallCounter:TimedownCounter }
-    type State = Start | InProgress of InProgress | End of Score
+
+    type State = 
+      | Start
+      | InProgress of InProgress
+      | End of Score
 
     type Direction = Left | Right | Down
     type RotateDirection = CW | CCW
+    
     [<RequireQualifiedAccess>]
-    type UserInput = None | Move of Direction | Rotate of RotateDirection | FallDown | Exit | Restart
+    type UserInput = 
+      | None
+      | Move of Direction
+      | Rotate of RotateDirection
+      | FallDown
+      | Exit
+      | Restart
 
     let blocks : Block list = 
         [
