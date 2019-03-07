@@ -30,6 +30,7 @@ module Domain
       | FallDown
       | Exit
       | Restart
+      | IncreaseCounter
 
     let blocks : Block list = 
         [

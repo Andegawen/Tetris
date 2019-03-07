@@ -9,11 +9,11 @@ module Game
         let el = ListExt.getRandomElement random blockDef
         el |> Set.map (fun c -> { c with X=c.X+(sizeX/2s) })
     
-    let isBlockInBound inProgressState block =
+    let isBlockInBound board block =
         let isCoordinateInBoardFrame (board:Board) coordinate =
             XYArray.get coordinate.X coordinate.Y board 
             |> Option.map (fun field -> field = Field.Empty) = Some true
-        block |> Set.forall (fun c -> isCoordinateInBoardFrame inProgressState.Board c)
+        block |> Set.forall (fun c -> isCoordinateInBoardFrame board c)
 
     let leftTopRotationPoint (block:Block) =
         let blockList = block |> Set.toList
@@ -54,7 +54,7 @@ module Game
     let rotateActiveBlock inProgressState rotateDirection = 
         let rotateActiveBlock' inProgressState angle=
             let ab=rotateBlockDueToPoint inProgressState.ActiveBlock angle centerRotationPoint
-            if isBlockInBound inProgressState ab then
+            if isBlockInBound inProgressState.Board ab then
                 {inProgressState with ActiveBlock=ab}
             else inProgressState
         match rotateDirection with
@@ -69,7 +69,7 @@ module Game
     let moveActiveBlock inProgressState direction =
         let moveActiveBlock' inProgressState shift = 
             let ab=moveBlock inProgressState.ActiveBlock shift
-            if isBlockInBound inProgressState ab then
+            if isBlockInBound inProgressState.Board ab then
                 {inProgressState with ActiveBlock=ab}
             else inProgressState
         match direction with
@@ -156,12 +156,22 @@ module Game
         let newscore = Score (scoreValue + (uint32)(valueToAdd))
         (newBoard, newscore)
 
-    let nextState random userInput state = 
+    let rec nextState random userInput state = 
         match (state, userInput) with
         | _, UserInput.Restart -> InProgress {Board = initBoard; Score= Score 0u; ActiveBlock=(generateActiveBlock blocks random 10s<x>); NextDownfallCounter=10}
         | Start, UserInput.Exit -> End <| Score 0u
         | Start, _
         | End _, _ -> state
+        | InProgress st, UserInput.IncreaseCounter -> 
+            let counter = st.NextDownfallCounter+1
+            if counter = 20 then //20*50ms=1000ms=1s  50ms comes from print function :( ugly I know
+                let newBlock = moveBlock st.ActiveBlock (0s<x>, 1s<y>)
+                if(isBlockInBound st.Board newBlock) then
+                    InProgress {st with ActiveBlock=newBlock; NextDownfallCounter=0}
+                else
+                    nextState random UserInput.FallDown state
+            else
+                InProgress {st with NextDownfallCounter=counter}
         | InProgress st, UserInput.Exit -> End st.Score
         | InProgress _, UserInput.None -> 
             state
@@ -186,7 +196,7 @@ module Game
                     Board = boardAfterLinesEval
                     ActiveBlock = newActiveBlock
                     Score=newScore
-                    NextDownfallCounter=inProgressState.NextDownfallCounter
+                    NextDownfallCounter=0
                     }
 
     let print state = 
@@ -243,8 +253,10 @@ module Game
         async{
         while (not (isEnd state)) do    
                 let! input = readKeys
-                state <- nextState r input state
                 Async.Sleep 50 |> Async.RunSynchronously
+                let command = if input = UserInput.None then UserInput.IncreaseCounter else input
+                state <- nextState r command state
+                
                 print state 
         } |> Async.RunSynchronously
             
