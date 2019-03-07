@@ -189,28 +189,26 @@ module Game
                     NextDownfallCounter=inProgressState.NextDownfallCounter
                     }
 
-    let print state : Async<unit> = 
-        async{
-            do! Async.Sleep 50
-            Console.Clear()
-            match state with
-            | Start -> printfn "Press s to start"
-            | InProgress progress -> 
-                let sb = StringBuilder()
-                for y in [0s .. (int16)progress.Board.maxY - 1s] |> List.map (y.lift) do
-                    sb.Append "|" |> ignore
-                    for x in [0s .. (int16)progress.Board.maxX  - 1s] |> List.map (x.lift) do
-                        if progress.ActiveBlock.Contains { X = x; Y= y} 
-                            then sb.Append "X" |> ignore
-                            else 
-                                ignore <| if XYArray.get x y progress.Board = Some Empty then sb.Append " " else sb.Append "*"
-                    sb.AppendLine "|" |> ignore
-                let (Score score) = progress.Score
-                sb.AppendLine <| sprintf "Score: %d" score |> ignore
-                sb.AppendLine <| sprintf "%A" progress.ActiveBlock |> ignore
-                Console.Write( sb.ToString())
-            | End (Score score) -> printfn "Score: %d" score
-        }
+    let print state = 
+        Console.Clear()
+        match state with
+        | Start -> printfn "Press s to start"
+        | InProgress progress -> 
+            let sb = StringBuilder()
+            for y in [0s .. (int16)progress.Board.maxY - 1s] |> List.map (y.lift) do
+                sb.Append "|" |> ignore
+                for x in [0s .. (int16)progress.Board.maxX  - 1s] |> List.map (x.lift) do
+                    if progress.ActiveBlock.Contains { X = x; Y= y} 
+                        then sb.Append "X" |> ignore
+                        else 
+                            ignore <| if XYArray.get x y progress.Board = Some Empty then sb.Append " " else sb.Append "*"
+                sb.AppendLine "|" |> ignore
+            let (Score score) = progress.Score
+            sb.AppendLine <| sprintf "Score: %d" score |> ignore
+            sb.AppendLine <| sprintf "%A" progress.ActiveBlock |> ignore
+            Console.Write( sb.ToString())
+        | End (Score score) -> printfn "Score: %d" score
+        
 
 
     let readKeys : Async<UserInput> = async {
@@ -241,12 +239,13 @@ module Game
     let play = 
         let r = System.Random 0
         let mutable state = State.Start
-        print state |> Async.RunSynchronously
+        print state
         async{
         while (not (isEnd state)) do    
                 let! input = readKeys
                 state <- nextState r input state
-                print state |> Async.RunSynchronously
+                Async.Sleep 50 |> Async.RunSynchronously
+                print state 
         } |> Async.RunSynchronously
             
             
