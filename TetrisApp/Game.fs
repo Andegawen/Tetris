@@ -73,9 +73,9 @@ module Game
                 {inProgressState with ActiveBlock=ab}
             else inProgressState
         match direction with
-        | Left -> moveActiveBlock' inProgressState (-1s<x>,0s<y>)
-        | Right -> moveActiveBlock' inProgressState (1s<x>,0s<y>)
-        | Down -> moveActiveBlock' inProgressState (0s<x>,1s<y>)
+        | Left -> moveActiveBlock' inProgressState (-1s<x>, 0s<y>)
+        | Right -> moveActiveBlock' inProgressState (1s<x>, 0s<y>)
+        | Down -> moveActiveBlock' inProgressState (0s<x>, 1s<y>)
 
     let fallDownBlock (board:Board) (activeBlock:Block) =
         let findYShift (board:Board) (block:Block) : int16<y> =
@@ -83,7 +83,7 @@ module Game
                 block
                 |> Set.toList
                 |> List.groupBy (fun c->c.X)
-                |> List.map (fun (x,col)-> (x,(List.maxBy (fun c->c.Y) col).Y))
+                |> List.map (fun (x,col)-> (x, (List.maxBy (fun c->c.Y) col).Y))
             
             let findTheMostTopNonEmptyY (xv:int16<x>) (startY:int16<y>) (board:Board) =
                 [(XYArray.removeUnit startY) .. (XYArray.removeUnit board.maxY)-1s]
@@ -106,14 +106,14 @@ module Game
         let theSmallestShiftY = findYShift board activeBlock
         let block = moveBlock activeBlock (0s<XYArray.x>, theSmallestShiftY)
         
-        let coords = block |> Set.toList |> List.map (fun c->(c.X,c.Y))
+        let coords = block |> Set.toList |> List.map (fun c->(c.X, c.Y))
         Option.get (XYArray.setMulti Field.Block board coords)
 
     let evaluateBoardProgression board (score:Score) :(Board*Score) =
         let blockBoardRepresentation = 
             board
             |> XYArray.toSeq
-            |> Seq.map (fun ((x,y),v)-> ({X=x;Y=y},v))
+            |> Seq.map (fun ((x,y),v)-> ({X=x;Y=y}, v))
             |> Seq.filter (fun (c,v)->v= Field.Block)
             |> Seq.map (fun (c,v)->c)
             |> Seq.toList
@@ -127,7 +127,7 @@ module Game
             let rec getRanges' minY maxY ys =
                 match ys with
                 | el1 :: tail -> seq {yield (minY, el1); yield! (getRanges' el1 maxY tail)}
-                | [] -> seq {yield (minY,maxY)}
+                | [] -> seq {yield (minY, maxY)}
             getRanges' minY maxY ys |> Seq.filter (fun (r1,r2)->r1<>r2)
         let newBoard = 
             let shiftToRanges =
