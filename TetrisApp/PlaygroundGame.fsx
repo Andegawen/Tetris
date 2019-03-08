@@ -40,3 +40,21 @@ print f
 print f1
 print f2
 print f3
+
+//falldown with points
+let board = XYArray.init 20s<x> 10s<y> (fun x y -> 
+                                        if y = 9s<y> then 
+                                            Field.Block 
+                                        else
+                                            if x= 1s<x> then 
+                                                Field.Block
+                                            else
+                                                Field.Empty)
+printfn "%s" <| XYArray.toString (fun f -> if f = Field.Block then "x" else " ") board
+let state1 = InProgress { Board=board; Score=Score 3u; ActiveBlock=blocks.Head; NextDownfallCounter=0 }
+let state2 = nextState UserInput.FallDown state1
+
+print state1
+print state2
+
+

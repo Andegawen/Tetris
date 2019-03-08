@@ -130,7 +130,7 @@ module Game
                 match ys with
                 | el1 :: tail -> seq {yield (minY, el1); yield! (getRanges' el1 maxY tail)}
                 | [] -> seq {yield (minY, maxY)}
-            getRanges' minY maxY ys |> Seq.filter (fun (r1,r2)->r1<>r2)
+            getRanges' minY maxY ys
         let newBoard = 
             let shiftToRanges =
                 let ranges = fullRows 
