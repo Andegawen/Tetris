@@ -200,6 +200,32 @@ module Game
                     Score=newScore
                     NextDownfallCounter=0
                     }
+    let printBlock (block:Block) =
+        let maxY =
+            block
+            |> Seq.maxBy (fun c->c.Y)
+            |> fun c -> (int16)c.Y
+        let minY =
+            block
+            |> Seq.minBy (fun c->c.Y)
+            |> fun c -> (int16)c.Y
+        let minX =
+            block
+            |> Seq.minBy (fun c->c.X)
+            |> fun c -> (int16)c.X
+        let maxX =
+            block
+            |> Seq.maxBy (fun c->c.X)
+            |> fun c -> (int16)c.X
+        let sb = StringBuilder()
+        for y in [minY .. maxY] |> List.map (y.lift) do
+                for x in [minX .. maxX] |> List.map (x.lift) do
+                    if block.Contains { X = x; Y= y} 
+                        then sb.Append "X" |> ignore
+                        else 
+                            sb.Append " " |> ignore
+                sb.AppendLine "" |> ignore 
+        sb.ToString()
 
     let print state = 
         Console.Clear()
