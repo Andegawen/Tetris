@@ -12,7 +12,12 @@ module Domain
 
     type Score = Score of uint32
                   static member getValue (Score a) = a
-    type InProgress = { Board:Board; Score:Score; ActiveBlock:Block; NextDownfallCounter:TimedownCounter }
+    type InProgress = { 
+      Board:Board
+      Score:Score
+      ActiveBlock:Block
+      NextBlock:Block
+      NextDownfallCounter:TimedownCounter }
 
     type State = 
       | Start

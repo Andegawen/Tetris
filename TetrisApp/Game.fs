@@ -160,7 +160,8 @@ module Game
         match (state, userInput) with
         | _, UserInput.Restart -> 
             let activeBlock = generateActiveBlock blocks random (initBoard.maxX/2s)
-            InProgress {Board = initBoard; Score= Score 0u; ActiveBlock=activeBlock; NextDownfallCounter=10}
+            let nextBlock = generateActiveBlock blocks random (initBoard.maxX/2s)
+            InProgress {Board = initBoard; Score= Score 0u; ActiveBlock=activeBlock; NextBlock=nextBlock; NextDownfallCounter=10}
         | Start, UserInput.Exit -> End <| Score 0u
         | Start, _
         | End _, _ -> state
@@ -189,14 +190,15 @@ module Game
 
             let boardAfterBlockFallDown = fallDownBlock inProgressState.Board inProgressState.ActiveBlock
             let (boardAfterLinesEval,newScore) = evaluateBoardProgression boardAfterBlockFallDown inProgressState.Score
-            let newActiveBlock = generateActiveBlock blocks random 10s<x>
+            let newActiveBlock = generateActiveBlock blocks random (initBoard.maxX/2s)
             if (isBlockClashing newActiveBlock boardAfterLinesEval) 
             then
                 End newScore
             else
                 InProgress {
                     Board = boardAfterLinesEval
-                    ActiveBlock = newActiveBlock
+                    ActiveBlock = inProgressState.NextBlock
+                    NextBlock = newActiveBlock
                     Score=newScore
                     NextDownfallCounter=0
                     }
@@ -226,7 +228,7 @@ module Game
                             sb.Append " " |> ignore
                 sb.AppendLine "" |> ignore 
         sb.ToString()
-
+            
     let print state = 
         Console.Clear()
         match state with
@@ -243,7 +245,8 @@ module Game
                 sb.AppendLine "|" |> ignore
             let (Score score) = progress.Score
             sb.AppendLine <| sprintf "Score: %d" score |> ignore
-            sb.AppendLine <| sprintf "%A" progress.ActiveBlock |> ignore
+            sb.AppendLine <| "Next block:" |> ignore
+            sb.AppendLine <| sprintf "%s" (printBlock progress.NextBlock) |> ignore
             Console.Write( sb.ToString())
         | End (Score score) -> printfn "Score: %d" score
         
