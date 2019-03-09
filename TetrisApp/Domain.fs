@@ -6,7 +6,7 @@ module Domain
     type Coordinate = {X:int16<x>; Y:int16<y>}
     type Block = Coordinate Set
 
-    let initBoard = XYArray.init  20s<x> 10s<y> (fun _ _ -> Empty)
+    let initBoard = XYArray.init 10s<x> 20s<y> (fun _ _ -> Empty)
 
     type TimedownCounter = int
 
