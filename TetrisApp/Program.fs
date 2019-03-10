@@ -1,9 +1,4 @@
-﻿open XYArray
-open Domain
-open Game
-open System
-
-[<EntryPoint>]
+﻿[<EntryPoint>]
 let main argv =
-    Game.play
+    ConsoleRenderer.play
     0 // return an integer exit code
