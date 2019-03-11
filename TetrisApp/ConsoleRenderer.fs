@@ -89,7 +89,10 @@ module ConsoleRenderer
                 let! input = readKeys
                 Async.Sleep 50 |> Async.RunSynchronously
                 let command = if input = UserInput.None then UserInput.IncreaseCounter else input
-                state <- nextState r command state
-                
+                let newstate = nextState r command state
+                if state <> newstate then 
+                    state <- newstate
                 print state 
+                else
+                    state <- newstate
         } |> Async.RunSynchronously
