@@ -51,16 +51,13 @@ module ConsoleRenderer
         | InProgress progress -> 
             let sb = StringBuilder()
             sb.AppendLine <| printBoardWithBlock progress.Board progress.ActiveBlock |> ignore
-            let (Score score) = progress.Score
-            sb.AppendLine <| sprintf "Score: %d" score |> ignore
+            sb.AppendLine <| sprintf "Score: %A" progress.Score |> ignore
             sb.AppendLine <| "Next block:" |> ignore
             sb.AppendLine <| sprintf "%s" (printBlock progress.NextBlock) |> ignore
             Console.Write( sb.ToString())
-        | End (Score score) -> printfn "Score: %d" score
-        
+        | End score -> printfn "Score: %A" score
 
-
-    let readKeys : Async<UserInput> = async {
+    let waitForCommand : Async<Command> = async {
         let mutable key = ConsoleKeyInfo();
         
         while (Console.KeyAvailable) do
@@ -68,31 +65,64 @@ module ConsoleRenderer
 
         let result = 
             match key.Key with
-            | ConsoleKey.S -> UserInput.Restart
-            | ConsoleKey.Z -> UserInput.Rotate RotateDirection.CCW
-            | ConsoleKey.X -> UserInput.Rotate RotateDirection.CW
-            | ConsoleKey.Spacebar -> UserInput.FallDown
-            | ConsoleKey.RightArrow -> UserInput.Move Direction.Right
-            | ConsoleKey.LeftArrow -> UserInput.Move Direction.Left
-            | ConsoleKey.DownArrow -> UserInput.Move Direction.Down
-            | ConsoleKey.Escape -> UserInput.Exit
-            | _ -> UserInput.None
+            | ConsoleKey.S -> Command.Restart
+            | ConsoleKey.Spacebar -> Command.FallDown
+            | ConsoleKey.UpArrow -> Command.Rotate
+            | ConsoleKey.RightArrow -> Command.Move Direction.Right
+            | ConsoleKey.LeftArrow -> Command.Move Direction.Left
+            | ConsoleKey.DownArrow -> Command.Move Direction.Down
+            | ConsoleKey.Escape -> Command.Exit
+            | _ -> Command.None
         return result
     }
 
+    let setTimerInterval (state:State) (timer:System.Timers.Timer) =
+        match state with
+        | Start ->  timer.Interval <- 1000.0
+        | InProgress state -> 
+            let interval = 1100.0 - (float)state.Score.Level * 100.0; 
+            timer.Interval <- interval
+        | End _ -> timer.Interval <- 1000.0
+
+    let getGameTimer =
+        let t = new System.Timers.Timer()
+        t.AutoReset <- true;
+        t    
+
+
     let play = 
         let r = System.Random 0
+        let nextState = nextState r
         let mutable state = State.Start
+        
+        use timer = getGameTimer
+        setTimerInterval state timer
+        
+        timer.Elapsed.Add(fun evArgs -> 
+            state <- nextState Command.FallDownByTime state
+            print state)
         print state
         async{
         while (not (isEnd state)) do    
-                let! input = readKeys
+                let! command = waitForCommand
+                match (state, command) with
+                | Start, _ -> timer.Stop() 
+                | (InProgress _, Command.Move Direction.Down) -> setTimerInterval state timer
+                | (InProgress _, Command.FallDown) -> setTimerInterval state timer
+                | (InProgress _, _) -> ()
+                | (End _,_) -> timer.Stop()
+
                 Async.Sleep 50 |> Async.RunSynchronously
-                let command = if input = UserInput.None then UserInput.IncreaseCounter else input
-                let newstate = nextState r command state
+                let newstate = nextState command state
+                match (state, newstate) with
+                | Start, InProgress _ -> timer.Start()
+                | _ -> ()
                 if state <> newstate then 
+                    match state, newstate with
+                    | InProgress oldP, InProgress newP when oldP.Score.Level <> newP.Score.Level -> setTimerInterval state timer
+                    | _ -> ()
                     state <- newstate
-                print state 
+                    print state 
                 else
                     state <- newstate
         } |> Async.RunSynchronously

@@ -18,46 +18,54 @@ module Game
         let elXmin = blockList |> List.minBy (fun c-> c.X);
         let elYmax = blockList |> List.maxBy (fun c-> c.Y);
         {X=elXmin.X; Y=elYmax.Y}
-    
-    let centerRotationPoint (block:Block)=
-            let blockList = block |> Set.toList
-            let elXmin = blockList |> List.minBy (fun c->c.X);
-            let elXmax = blockList |> List.maxBy (fun c->c.X);
-            let elYmin = blockList |> List.minBy (fun c->c.Y);
-            let elYmax = blockList |> List.maxBy (fun c->c.Y);
 
-            let xv=Math.Round((double)(elXmax.X-elXmin.X)/2.0, MidpointRounding.AwayFromZero)
-            let yv=Math.Round((double)(elYmax.Y-elYmin.Y)/2.0, MidpointRounding.AwayFromZero)
-            let x = (int)xv |> x.lift
-            let y = (int)yv |> y.lift
-            let rotPoint = {X=elXmin.X+x; Y=elYmin.Y+y}
-            printfn "%A" rotPoint
-            rotPoint
-    let private rotateBlockDueToPoint (block:Block) (angle:float) (rotationPointDueToOrigin:Block->Coordinate): Block=
-        let shift = rotationPointDueToOrigin(block)
-        block 
-        |> Set.map (fun c -> 
-            let coordinateShiftedToOrigin = {X= (c.X - shift.X); Y = (c.Y - shift.Y)}
-            let xv = XYArray.removeUnit coordinateShiftedToOrigin.X
-            let yv = XYArray.removeUnit coordinateShiftedToOrigin.Y
-            let cooridinateRotatedInOrigin = {
-                X=x.lift(xv * (int16) (cos angle) - yv  * (int16) (sin angle));
-                Y=y.lift(yv * (int16) (cos angle) + xv * (int16) (sin angle))
-            }
-            let coordinateRotatedAndShiftedToOriginal = 
-                {X= cooridinateRotatedInOrigin.X + shift.X; Y=cooridinateRotatedInOrigin.Y + shift.Y}
-            coordinateRotatedAndShiftedToOriginal)
+    let centerRotationPoint (block:Block)=    
+        let blockList = block |> Set.toList
+        let getX = fun c->c.X
+        let getY = fun c->c.Y
+        let elXmin = blockList |> List.minBy (fun c->c.X) |> getX;
+        let elXmax = blockList |> List.maxBy (fun c->c.X) |> getX;
+        let elYmin = blockList |> List.minBy (fun c->c.Y) |> getY;
+        let elYmax = blockList |> List.maxBy (fun c->c.Y) |> getY;
+
+        let xv=Math.Round((double)(elXmax-elXmin)/2.0, MidpointRounding.AwayFromZero)
+        let yv=Math.Round((double)(elYmax-elYmin)/2.0, MidpointRounding.AwayFromZero)
+        let x = (int)xv |> x.lift
+        let y = (int)yv |> y.lift
+        let rotPoint = {X=elXmin+x; Y=elYmin+y}
+        rotPoint
+
+    let convertTo1based block = block |> Seq.map (fun c->{X=c.X+1s<x>; Y=c.Y+1s<y>})
+    let convertTo0based block = block |> Seq.map (fun c->{X=c.X-1s<x>; Y=c.Y-1s<y>})
+    let convertYaxis block = block |> Seq.map (fun c->{c with Y=c.Y*(-1s)})
+    let rotateBlockDueToPoint (block:Block) (angle:float) (rotationPointDueToOrigin:Block->Coordinate): Block=
+        let b=(convertTo1based >> convertYaxis) block |> Set.ofSeq
+        let shiftToRotationOrigin = rotationPointDueToOrigin(b)
+        let radAngle = angle * Math.PI/180.0
+        let rotatedBlock =
+            b
+            |> Set.map (fun c -> 
+                let coordinateShiftedToOrigin = {X= (c.X - shiftToRotationOrigin.X); Y = (c.Y - shiftToRotationOrigin.Y)}
+                let xv = XYArray.removeUnit coordinateShiftedToOrigin.X
+                let yv = XYArray.removeUnit coordinateShiftedToOrigin.Y
+                let cooridinateRotatedInOrigin = {
+                    X=x.lift(xv * (int16) (cos radAngle) - yv  * (int16) (sin radAngle));
+                    Y=y.lift(yv * (int16) (cos radAngle) + xv * (int16) (sin radAngle))
+                }
+                let coordinateRotatedAndShiftedToOriginal = 
+                    {X= cooridinateRotatedInOrigin.X + shiftToRotationOrigin.X; Y=cooridinateRotatedInOrigin.Y + shiftToRotationOrigin.Y}
+                coordinateRotatedAndShiftedToOriginal)
+        rotatedBlock 
+        |> (convertYaxis >> convertTo0based) |> Set.ofSeq
     
         
-    let rotateActiveBlock inProgressState rotateDirection = 
+    let rotateActiveBlock inProgressState = 
         let rotateActiveBlock' inProgressState angle=
             let ab=rotateBlockDueToPoint inProgressState.ActiveBlock angle centerRotationPoint
             if isBlockInBound inProgressState.Board ab then
                 {inProgressState with ActiveBlock=ab}
             else inProgressState
-        match rotateDirection with
-        | CCW -> rotateActiveBlock' inProgressState (System.Math.PI/2.0)
-        | CW -> rotateActiveBlock' inProgressState (-System.Math.PI/2.0)
+        rotateActiveBlock' inProgressState 90.0
 
     let moveBlock block shift =
         let (x,y) = shift
@@ -149,38 +157,38 @@ module Game
             |> List.map (fun s->(s.X, s.Y))
             |> XYArray.setMulti Field.Block initBoard
             |> Option.get
-        let scoreValue = (Score.getValue score);
-        let valueToAdd = (List.length fullRows)*100
-        let newscore = Score (scoreValue + (uint32)(valueToAdd))
+        
+        let rows = List.length fullRows
+        let newLines = score.Lines + rows;
+        let newScoreValue = score.Value + rows*100
+        let level = newLines / 10 + 1
+
+        let newscore = {Level = level; Value=newScoreValue; Lines=newLines}
         (newBoard, newscore)
 
     let rec nextState random userInput state = 
         match (state, userInput) with
-        | _, UserInput.Restart -> 
+        | _, Command.Restart -> 
             let activeBlock = generateActiveBlock blocks random (initBoard.maxX/2s)
             let nextBlock = generateActiveBlock blocks random (initBoard.maxX/2s)
-            InProgress {Board = initBoard; Score= Score 0u; ActiveBlock=activeBlock; NextBlock=nextBlock; NextDownfallCounter=10}
-        | Start, UserInput.Exit -> End <| Score 0u
+            InProgress {Board = initBoard; Score= {Level=1; Value=0; Lines=0}; ActiveBlock=activeBlock; NextBlock=nextBlock}
+        | Start, Command.Exit -> End <| {Level=1; Value=0;Lines=0}
         | Start, _
         | End _, _ -> state
-        | InProgress st, UserInput.IncreaseCounter -> 
-            let counter = st.NextDownfallCounter+1
-            if counter = 20 then //20*50ms=1000ms=1s  50ms comes from print function :( ugly I know
-                let newBlock = moveBlock st.ActiveBlock (0s<x>, 1s<y>)
-                if(isBlockInBound st.Board newBlock) then
-                    InProgress {st with ActiveBlock=newBlock; NextDownfallCounter=0}
-                else
-                    nextState random UserInput.FallDown state
+        | InProgress st, Command.FallDownByTime -> 
+            let newBlock = moveBlock st.ActiveBlock (0s<x>, 1s<y>)
+            if(isBlockInBound st.Board newBlock) then
+                InProgress {st with ActiveBlock=newBlock}
             else
-                InProgress {st with NextDownfallCounter=counter}
-        | InProgress st, UserInput.Exit -> End st.Score
-        | InProgress _, UserInput.None -> 
+                nextState random Command.FallDown state
+        | InProgress st, Command.Exit -> End st.Score
+        | InProgress _, Command.None -> 
             state
-        | InProgress inProgressState, UserInput.Rotate direction ->
-            InProgress (rotateActiveBlock inProgressState direction)
-        | InProgress inProgressState, UserInput.Move direction ->
+        | InProgress inProgressState, Command.Rotate ->
+            InProgress (rotateActiveBlock inProgressState)
+        | InProgress inProgressState, Command.Move direction ->
             InProgress (moveActiveBlock inProgressState direction)
-        | InProgress inProgressState, UserInput.FallDown ->
+        | InProgress inProgressState, Command.FallDown ->
             let isBlockClashing block board =
                 block                
                 |> Set.map (fun c -> XYArray.get c.X c.Y board)
@@ -198,7 +206,6 @@ module Game
                     ActiveBlock = inProgressState.NextBlock
                     NextBlock = newActiveBlock
                     Score=newScore
-                    NextDownfallCounter=0
                     }
     
 
