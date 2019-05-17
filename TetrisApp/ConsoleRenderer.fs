@@ -119,18 +119,18 @@ module ConsoleRenderer
                 | (_,_) -> ()
 
                 let newstate = nextStateFunction cmd state
+                
                 match (state, newstate) with
-                | Start, InProgress p -> setTimerInterval p.Score.Level timer; timer.Start()
-                | _ -> ()
-                if state <> newstate then 
-                    match state, newstate with
-                    | InProgress oldP, InProgress newP when oldP.Score.Level <> newP.Score.Level 
-                        -> setTimerInterval newP.Score.Level timer
-                    | _ -> ()
-                    state <- newstate
-                    print state 
-                else
-                    state <- newstate)
+                | Start, InProgress p 
+                    -> setTimerInterval p.Score.Level timer; timer.Start()
+                | InProgress oldP, InProgress newP 
+                    when oldP.Score.Level <> newP.Score.Level 
+                    -> setTimerInterval newP.Score.Level timer
+                | _  
+                    when state <> newstate 
+                    -> print newstate
+                | _ 
+                    -> state <- newstate)
         
         let command = waitForCommand eventHub
         try
