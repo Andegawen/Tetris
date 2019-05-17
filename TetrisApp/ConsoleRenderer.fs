@@ -4,6 +4,7 @@ module ConsoleRenderer
     open Game
     open System
     open System.Text
+    open Events
 
     let printBlock (block:Block) =
         let maxY =
@@ -51,38 +52,40 @@ module ConsoleRenderer
         | InProgress progress -> 
             let sb = StringBuilder()
             sb.AppendLine <| printBoardWithBlock progress.Board progress.ActiveBlock |> ignore
-            sb.AppendLine <| sprintf "Score: %A" progress.Score |> ignore
+            sb.AppendLine <| sprintf "Level: %i Score: %i Lines: %i" progress.Score.Level progress.Score.Value progress.Score.Lines |> ignore
             sb.AppendLine <| "Next block:" |> ignore
             sb.AppendLine <| sprintf "%s" (printBlock progress.NextBlock) |> ignore
             Console.Write( sb.ToString())
         | End score -> printfn "Score: %A" score
 
-    let waitForCommand : Async<Command> = async {
-        let mutable key = ConsoleKeyInfo();
+    let waitForCommand (eventPublisher:EventHub) = 
+        let waitForCommand' = async {
+            let mutable key = ConsoleKeyInfo();
+            
+            while (Console.KeyAvailable) do
+                key <- Console.ReadKey(true)
+
+            let result = 
+                match key.Key with
+                | ConsoleKey.S -> Command.Restart
+                | ConsoleKey.Spacebar -> Command.FallDown
+                | ConsoleKey.UpArrow -> Command.Rotate
+                | ConsoleKey.RightArrow -> Command.Move Direction.Right
+                | ConsoleKey.LeftArrow -> Command.Move Direction.Left
+                | ConsoleKey.DownArrow -> Command.Move Direction.Down
+                | ConsoleKey.Escape -> Command.Exit
+                | _ -> Command.None
+            return result
+        }
+        async{
+            while true do
+                let! cmd = waitForCommand'
+                eventPublisher.Publish(cmd)
+        }
         
-        while (Console.KeyAvailable) do
-            key <- Console.ReadKey(true)
 
-        let result = 
-            match key.Key with
-            | ConsoleKey.S -> Command.Restart
-            | ConsoleKey.Spacebar -> Command.FallDown
-            | ConsoleKey.UpArrow -> Command.Rotate
-            | ConsoleKey.RightArrow -> Command.Move Direction.Right
-            | ConsoleKey.LeftArrow -> Command.Move Direction.Left
-            | ConsoleKey.DownArrow -> Command.Move Direction.Down
-            | ConsoleKey.Escape -> Command.Exit
-            | _ -> Command.None
-        return result
-    }
-
-    let setTimerInterval (state:State) (timer:System.Timers.Timer) =
-        match state with
-        | Start ->  timer.Interval <- 1000.0
-        | InProgress state -> 
-            let interval = 1100.0 - (float)state.Score.Level * 100.0; 
-            timer.Interval <- interval
-        | End _ -> timer.Interval <- 1000.0
+    let setTimerInterval (level:int) (timer:System.Timers.Timer) =
+        timer.Interval <- 1100.0 - (float)level * 100.0; 
 
     let getGameTimer =
         let t = new System.Timers.Timer()
@@ -91,38 +94,47 @@ module ConsoleRenderer
 
 
     let play = 
+        let eventHub = EventHub()
+        use tokenSource = new System.Threading.CancellationTokenSource()
+        let token = tokenSource.Token
+        
         let r = System.Random 0
         let nextState = nextState r
         let mutable state = State.Start
         
         use timer = getGameTimer
-        setTimerInterval state timer
-        
-        timer.Elapsed.Add(fun evArgs -> 
-            state <- nextState Command.FallDownByTime state
-            print state)
+        timer.Stop()
+        timer.Elapsed.Add(fun _ -> eventHub.Publish(Command.FallDownByTime))
         print state
-        async{
-        while (not (isEnd state)) do    
-                let! command = waitForCommand
-                match (state, command) with
+        eventHub.Subscribe(fun cmd ->
+                match (state, cmd) with
                 | Start, _ -> timer.Stop() 
-                | (InProgress _, Command.Move Direction.Down) -> setTimerInterval state timer
-                | (InProgress _, Command.FallDown) -> setTimerInterval state timer
+                | (InProgress p, Command.Move Direction.Down) -> setTimerInterval p.Score.Level timer
+                | (InProgress p, Command.FallDown) -> setTimerInterval p.Score.Level timer
                 | (InProgress _, _) -> ()
-                | (End _,_) -> timer.Stop()
+                | (End _,_) -> timer.Stop(); tokenSource.Cancel()
 
-                Async.Sleep 50 |> Async.RunSynchronously
-                let newstate = nextState command state
+                let newstate = nextState cmd state
                 match (state, newstate) with
-                | Start, InProgress _ -> timer.Start()
+                | Start, InProgress p -> setTimerInterval p.Score.Level timer; timer.Start()
                 | _ -> ()
                 if state <> newstate then 
                     match state, newstate with
-                    | InProgress oldP, InProgress newP when oldP.Score.Level <> newP.Score.Level -> setTimerInterval state timer
+                    | InProgress oldP, InProgress newP when oldP.Score.Level <> newP.Score.Level 
+                        -> setTimerInterval newP.Score.Level timer
                     | _ -> ()
                     state <- newstate
                     print state 
                 else
-                    state <- newstate
-        } |> Async.RunSynchronously
+                    state <- newstate)
+        
+        let command = waitForCommand eventHub
+        try
+            Async.RunSynchronously(command, cancellationToken=token)
+        with 
+        | :? System.OperationCanceledException as ex -> ()
+        
+        
+        
+        
+        
