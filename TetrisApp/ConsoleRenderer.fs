@@ -113,11 +113,8 @@ module ConsoleRenderer
                 match (state, cmd) with
                 | (InProgress p, Command.Move Direction.Down) -> setTimerInterval p.Score.Level timer
                 | (InProgress p, Command.FallDown) -> setTimerInterval p.Score.Level timer
-                | (InProgress _, _) -> ()
-                | (End _,_) -> timer.Stop(); tokenSource.Cancel()
-                | (_, Domain.Command.Restart) -> timer.Stop() 
-                | (_,_) -> ()
-
+                | _ -> ()
+                
                 let newstate = nextStateFunction cmd state
                 
                 match (state, newstate) with
@@ -126,11 +123,14 @@ module ConsoleRenderer
                 | InProgress oldP, InProgress newP 
                     when oldP.Score.Level <> newP.Score.Level 
                     -> setTimerInterval newP.Score.Level timer
-                | _  
-                    when state <> newstate 
-                    -> print newstate
+                | (_,End s) 
+                    -> timer.Stop(); print newstate; tokenSource.Cancel()
                 | _ 
-                    -> state <- newstate)
+                    when state<>newstate
+                    -> print newstate
+                | _ -> ()
+                state <- newstate)
+                
         
         let command = waitForCommand eventHub
         try
