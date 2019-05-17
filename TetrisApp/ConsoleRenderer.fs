@@ -97,17 +97,18 @@ module ConsoleRenderer
 
     let play = 
         let eventHub = EventHub()
-        use tokenSource = new System.Threading.CancellationTokenSource()
-        let token = tokenSource.Token
-        
-        let r = System.Random 0
-        let nextState = nextState r
-        let mutable state = State.Start
         
         use timer = getGameTimer
         timer.Stop()
         timer.Elapsed.Add(fun _ -> eventHub.Publish(Command.FallDownByTime))
+
+        let mutable state = State.Start
+        let nextStateFunction = nextState (System.Random 0)
         print state
+
+        use tokenSource = new System.Threading.CancellationTokenSource()
+        let token = tokenSource.Token
+
         eventHub.Subscribe(fun cmd ->
                 match (state, cmd) with
                 | Start, _ -> timer.Stop() 
@@ -116,7 +117,7 @@ module ConsoleRenderer
                 | (InProgress _, _) -> ()
                 | (End _,_) -> timer.Stop(); tokenSource.Cancel()
 
-                let newstate = nextState cmd state
+                let newstate = nextStateFunction cmd state
                 match (state, newstate) with
                 | Start, InProgress p -> setTimerInterval p.Score.Level timer; timer.Start()
                 | _ -> ()
