@@ -111,11 +111,12 @@ module ConsoleRenderer
 
         eventHub.Subscribe(fun cmd ->
                 match (state, cmd) with
-                | Start, _ -> timer.Stop() 
                 | (InProgress p, Command.Move Direction.Down) -> setTimerInterval p.Score.Level timer
                 | (InProgress p, Command.FallDown) -> setTimerInterval p.Score.Level timer
                 | (InProgress _, _) -> ()
                 | (End _,_) -> timer.Stop(); tokenSource.Cancel()
+                | (_, Domain.Command.Restart) -> timer.Stop() 
+                | (_,_) -> ()
 
                 let newstate = nextStateFunction cmd state
                 match (state, newstate) with
