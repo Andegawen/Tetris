@@ -27,8 +27,7 @@ module Domain
     type RotateDirection = CW | CCW
     
     [<RequireQualifiedAccess>]
-    type Command = 
-      | None
+    type Command =
       | Move of Direction
       | Rotate
       | FallDown

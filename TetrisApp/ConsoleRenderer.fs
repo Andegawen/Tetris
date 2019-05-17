@@ -67,20 +67,22 @@ module ConsoleRenderer
 
             let result = 
                 match key.Key with
-                | ConsoleKey.S -> Command.Restart
-                | ConsoleKey.Spacebar -> Command.FallDown
-                | ConsoleKey.UpArrow -> Command.Rotate
-                | ConsoleKey.RightArrow -> Command.Move Direction.Right
-                | ConsoleKey.LeftArrow -> Command.Move Direction.Left
-                | ConsoleKey.DownArrow -> Command.Move Direction.Down
-                | ConsoleKey.Escape -> Command.Exit
-                | _ -> Command.None
+                | ConsoleKey.S -> Some Command.Restart
+                | ConsoleKey.Spacebar -> Some Command.FallDown
+                | ConsoleKey.UpArrow -> Some Command.Rotate
+                | ConsoleKey.RightArrow -> Some <| Command.Move Direction.Right
+                | ConsoleKey.LeftArrow -> Some <| Command.Move Direction.Left
+                | ConsoleKey.DownArrow -> Some <| Command.Move Direction.Down
+                | ConsoleKey.Escape -> Some Command.Exit
+                | _ -> None
             return result
         }
         async{
             while true do
                 let! cmd = waitForCommand'
-                eventPublisher.Publish(cmd)
+                cmd |> Option.bind (fun c-> 
+                    eventPublisher.Publish(c)
+                    None) |> ignore
         }
         
 

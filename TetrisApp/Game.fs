@@ -182,8 +182,6 @@ module Game
             else
                 nextState random Command.FallDown state
         | InProgress st, Command.Exit -> End st.Score
-        | InProgress _, Command.None -> 
-            state
         | InProgress inProgressState, Command.Rotate ->
             InProgress (rotateActiveBlock inProgressState)
         | InProgress inProgressState, Command.Move direction ->
