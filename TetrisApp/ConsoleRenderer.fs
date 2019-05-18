@@ -39,9 +39,9 @@ module ConsoleRenderer
                 sb.Append "|" |> ignore
                 for x in [0s .. (int16)board.maxX  - 1s] |> List.map (x.lift) do
                     if activeBlock.Contains { X = x; Y= y} 
-                        then sb.Append "X" |> ignore
+                        then sb.Append "#" |> ignore
                         else 
-                            ignore <| if XYArray.get x y board = Some Empty then sb.Append " " else sb.Append "*"
+                            ignore <| if XYArray.get x y board = Some Empty then sb.Append " " else sb.Append "X"
                 sb.AppendLine "|" |> ignore
         sb.ToString()            
             
