@@ -85,7 +85,7 @@ module Game
 
     // ToDo problem with a first line in the board! Non empty field above don't go down!
     // it's not the issue for other lines
-    let fallDownBlock (board:Board) (activeBlock:Block)  : Board=
+    let fallDownBlock (board:Board) (activeBlock:Block)  : (Board*int16<y>)=
         let findYShift (board:Board) (block:Block) : int16<y> =
             let ``x to the most bottom Y from block`` =
                 block
@@ -115,9 +115,9 @@ module Game
         let block = moveBlock activeBlock (0s<XYArray.x>, theSmallestShiftY)
         
         let coords = block |> Set.toList |> List.map (fun c->(c.X, c.Y))
-        Option.get (XYArray.setMulti Field.Block board coords)
+        ((Option.get (XYArray.setMulti Field.Block board coords)),theSmallestShiftY)
 
-    let evaluateBoardProgression board (score:Score) :(Board*Score) =
+    let evaluateBoardProgression board shiftY (score:Score) :(Board*Score) =
         let blockBoardRepresentation = 
             board
             |> XYArray.toSeq
@@ -160,7 +160,7 @@ module Game
         
         let rows = List.length fullRows
         let newLines = score.Lines + rows;
-        let newScoreValue = score.Value + rows*100
+        let newScoreValue = score.Value + rows*100 + (int)shiftY * 10
         let level = newLines / 10 + 1
 
         let newscore = {Level = level; Value=newScoreValue; Lines=newLines}
@@ -193,7 +193,7 @@ module Game
                 |> Set.exists (fun field -> field = (Some Field.Block))
 
             let boardAfterBlockFallDown = fallDownBlock inProgressState.Board inProgressState.ActiveBlock
-            let (boardAfterLinesEval,newScore) = evaluateBoardProgression boardAfterBlockFallDown inProgressState.Score
+            let (boardAfterLinesEval,newScore) = evaluateBoardProgression (fst boardAfterBlockFallDown) (snd boardAfterBlockFallDown) inProgressState.Score
             let newActiveBlock = generateActiveBlock blocks random (initBoard.maxX/2s)
             if (isBlockClashing newActiveBlock boardAfterLinesEval) 
             then
@@ -211,7 +211,3 @@ module Game
         match state with
         | State.End _ -> true
         | _ -> false
-
-
-            
-            
